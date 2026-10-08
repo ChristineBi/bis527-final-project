@@ -1,0 +1,877 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<html lang="pt-BR"><HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE>TabNet Win32 3.3: S&Iacute;FILIS CONG&Ecirc;NITA - Casos confirmados notificados no Sistema de Informa&ccedil;&atilde;o de Agravos de Notifica&ccedil;&atilde;o - Brasil</TITLE>
+<LINK REL="stylesheet" HREF="/TABNET/tabnet2.css" TYPE="text/css"><!-- com a opção JCSS -->
+<LINK REL="stylesheet" HREF="/tabnet/tabnetp2.css" MEDIA="print"  TYPE="text/css"><!-- com a opção JCSSP -->
+<script type="text/javascript" src="/TABNET/tabalfa.js"></script>
+</HEAD><BODY>
+ <div name="governo" class="todalargura">
+ <div class="testeira" cellspacing="0" cellpadding="0">
+   <div class="Escondido" style="background-color: #ffcc00;">
+      <div>
+         <a href="http://www.saude.gov.br" target="_blank">
+            <img alt="Ministério da Saúde" src="/cgi/imagem/principal_r1_c1_res.gif" height="21" id="img1" />
+         </a>
+     </div>
+ </div>
+ <div class="testeira" cellspacing="0" cellpadding="0">
+    <div class="info_saude">
+         <a href="/tabnet/tabnet.htm" alt="Informações de Saúde" title="Informações de Saúde">Informa&ccedil;&otilde;es de Sa&uacute;de</a>
+   </div>
+      <div class="marca_tabnet">
+       <p>DATASUS<span>&nbsp;&nbsp;Tecnologia da Informa&ccedil;&atilde;o a Servi&ccedil;o do SUS<a href="http://www.datasus.gov.br" alt="MS/SE/Datasus" title="MS/SE/Datasus"></a></span></p>
+   </div>
+        <div class="ajuda">
+          <a href="/tabnet/tabdescr.htm">Ajuda</a>
+      </div>
+           <div class="notific">
+        <!--<a href="sim/Mortalidade_Geral_1996_2012.pdf">Notas T&eacute;cnicas</a></p>-->
+   </div>       <div class="datasus">
+       <p>DATASUS</p>
+   </div>
+   </div>
+<CENTER>
+<div class="container">
+<FORM ACTION="/cgi/tabcgi.exe?sinannet/cnv/sifilisbr.def" METHOD=POST target = "_blank">
+<div class="titulo">
+  <H2 class="Nivel0">S&Iacute;FILIS CONG&Ecirc;NITA - Casos confirmados notificados no Sistema de Informa&ccedil;&atilde;o de Agravos de Notifica&ccedil;&atilde;o - Brasil</H2>
+</div>
+<div class="borda">
+  <div class="corpoperiodo">
+    <div class="linha">
+    <LABEL for="L"><b>Linha</b></LABEL>
+    <SELECT NAME="Linha" ID="L" SIZE=4 ><OPTION VALUE="Ano_Diagnóstico" SELECTED>Ano Diagn&oacute;stico
+    <OPTION VALUE="Mês_Diagnóstico">M&ecirc;s Diagn&oacute;stico
+    <OPTION VALUE="Região_de_notificação">Regi&atilde;o de notifica&ccedil;&atilde;o
+    <OPTION VALUE="Região/UF_de_notificação">Regi&atilde;o/UF de notifica&ccedil;&atilde;o
+    <OPTION VALUE="UF_de_notificação">UF de notifica&ccedil;&atilde;o
+    </SELECT>
+    </div>
+    <div class="coluna">
+    <LABEL for="C"><b>Coluna</b></LABEL>
+    <SELECT NAME="Coluna" ID="C" SIZE=4 ><OPTION VALUE="--Não-Ativa--" SELECTED>N&atilde;o ativa
+    <OPTION VALUE="Ano_Diagnóstico">Ano Diagn&oacute;stico
+    <OPTION VALUE="Mês_Diagnóstico">M&ecirc;s Diagn&oacute;stico
+    <OPTION VALUE="Região_de_notificação">Regi&atilde;o de notifica&ccedil;&atilde;o
+    <OPTION VALUE="UF_de_notificação">UF de notifica&ccedil;&atilde;o
+    </SELECT>
+    </div>
+    <div class="conteudo">
+    <LABEL for="I"><b>Conte&uacute;do</b></LABEL>
+    <SELECT NAME="Incremento" ID="I" SIZE=4 MULTIPLE><OPTION VALUE="Casos_confirmados" SELECTED>Casos confirmados
+    </SELECT> <P>
+    </div>
+  </div>
+</div>
+<div class="periodo">
+  <LABEL for="A"><H2 class="Nivel0">Per&iacute;odos Dispon&iacute;veis</H2></LABEL>
+  <div class="corpoperiodo">
+  <SELECT NAME="Arquivos" ID="A" SIZE=4 MULTIPLE><OPTION VALUE="sifcbr25.dbf" SELECTED >2025
+    <OPTION VALUE="sifcbr24.dbf">2024
+    <OPTION VALUE="sifcbr23.dbf">2023
+    <OPTION VALUE="sifcbr22.dbf">2022
+    <OPTION VALUE="sifcbr21.dbf">2021
+    </SELECT>
+  </div>
+</div>
+<P>
+<div class="selecoes">
+<H2 class="Nivel0">Sele&ccedil;&otilde;es Dispon&iacute;veis</H2><P>
+<div class="corposelecoes">
+<div class="opcoes">
+<div class="titulo_select"><img id="fig1" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S1','fig1','pesqmes1','listahidden1','bt_selecionar1')">
+  <LABEL for="S1">Ano Diagn&oacute;stico
+  </LABEL>
+  <LABEL for="pesqmes1">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes1" class="achefacil" id="pesqmes1"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S1',listahidden1,bt_selecionar1);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden1" id="listahidden1" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S1',pesqmes1,bt_selecionar1);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar1" id="bt_selecionar1" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SAno_Diagnóstico" ID="S1" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Em Branco/ign
+    <OPTION VALUE="2"><1975
+    <OPTION VALUE="3">1975
+    <OPTION VALUE="4">1976
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig2" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S2','fig2','pesqmes2','listahidden2','bt_selecionar2')">
+  <LABEL for="S2">M&ecirc;s Diagn&oacute;stico
+  </LABEL>
+  <LABEL for="pesqmes2">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes2" class="achefacil" id="pesqmes2"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S2',listahidden2,bt_selecionar2);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden2" id="listahidden2" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S2',pesqmes2,bt_selecionar2);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar2" id="bt_selecionar2" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SMês_Diagnóstico" ID="S2" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Ign/Branco
+    <OPTION VALUE="2">Janeiro
+    <OPTION VALUE="3">Fevereiro
+    <OPTION VALUE="4">Marco
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig3" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S3','fig3','','','')">
+  <LABEL for="S3">Regi&atilde;o de notifica&ccedil;&atilde;o
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SRegião_de_notificação" ID="S3" SIZE=7 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">1 Regi&atilde;o Norte
+    <OPTION VALUE="2">2 Regi&atilde;o Nordeste
+    <OPTION VALUE="3">3 Regi&atilde;o Sudeste
+    <OPTION VALUE="4">4 Regi&atilde;o Sul
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig4" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S4','fig4','pesqmes4','listahidden4','bt_selecionar4')">
+  <LABEL for="S4">UF de notifica&ccedil;&atilde;o
+  </LABEL>
+  <LABEL for="pesqmes4">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes4" class="achefacil" id="pesqmes4"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S4',listahidden4,bt_selecionar4);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden4" id="listahidden4" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S4',pesqmes4,bt_selecionar4);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar4" id="bt_selecionar4" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SUF_de_notificação" ID="S4" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Acre
+    <OPTION VALUE="2">Alagoas
+    <OPTION VALUE="3">Amap&aacute;
+    <OPTION VALUE="4">Amazonas
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig5" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S5','fig5','pesqmes5','listahidden5','bt_selecionar5')">
+  <LABEL for="S5">Munic&iacute;pio de notifica&ccedil;&atilde;o
+  </LABEL>
+  <LABEL for="pesqmes5">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes5" class="achefacil" id="pesqmes5"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S5',listahidden5,bt_selecionar5);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden5" id="listahidden5" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S5',pesqmes5,bt_selecionar5);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar5" id="bt_selecionar5" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SMunicípio_de_notificação" ID="S5" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1"> MUNICIPIO IGNORADO - RO
+    <OPTION VALUE="2">110001 ALTA FLORESTA D'OESTE
+    <OPTION VALUE="3">110002 ARIQUEMES
+    <OPTION VALUE="4">110003 CABIXI
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig6" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S6','fig6','pesqmes6','listahidden6','bt_selecionar6')">
+  <LABEL for="S6">Capital de notifica&ccedil;&atilde;o
+  </LABEL>
+  <LABEL for="pesqmes6">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes6" class="achefacil" id="pesqmes6"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S6',listahidden6,bt_selecionar6);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden6" id="listahidden6" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S6',pesqmes6,bt_selecionar6);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar6" id="bt_selecionar6" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SCapital_de_notificação" ID="S6" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">110020 Porto Velho
+    <OPTION VALUE="2">120040 Rio Branco
+    <OPTION VALUE="3">130260 Manaus
+    <OPTION VALUE="4">140010 Boa Vista
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig7" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S7','fig7','pesqmes7','listahidden7','bt_selecionar7')">
+  <LABEL for="S7">Regi&atilde;o de Sa&uacute;de (CIR) de notif
+  </LABEL>
+  <LABEL for="pesqmes7">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes7" class="achefacil" id="pesqmes7"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S7',listahidden7,bt_selecionar7);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden7" id="listahidden7" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S7',pesqmes7,bt_selecionar7);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar7" id="bt_selecionar7" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SRegião_de_Saúde_(CIR)_de_notif" ID="S7" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">11001 Vale do Jamari
+    <OPTION VALUE="2">11002 Caf&eacute;
+    <OPTION VALUE="3">11003 Central
+    <OPTION VALUE="4">11004 Madeira-Mamor&eacute;
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig8" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S8','fig8','pesqmes8','listahidden8','bt_selecionar8')">
+  <LABEL for="S8">Macrorreg.de Sa&uacute;de de notific
+  </LABEL>
+  <LABEL for="pesqmes8">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes8" class="achefacil" id="pesqmes8"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S8',listahidden8,bt_selecionar8);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden8" id="listahidden8" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S8',pesqmes8,bt_selecionar8);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar8" id="bt_selecionar8" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SMacrorreg.de_Saúde_de_notific" ID="S8" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">1101 MACRORREGIONAL II (CACOAL)
+    <OPTION VALUE="2">1102 MACRORREGIAO I - PORTO VELHO
+    <OPTION VALUE="3">Ignorado - RO
+    <OPTION VALUE="4">1201 MACRO UNICA - AC
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig9" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S9','fig9','pesqmes9','listahidden9','bt_selecionar9')">
+  <LABEL for="S9">Microrregi&atilde;o IBGE de notific
+  </LABEL>
+  <LABEL for="pesqmes9">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes9" class="achefacil" id="pesqmes9"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S9',listahidden9,bt_selecionar9);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden9" id="listahidden9" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S9',pesqmes9,bt_selecionar9);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar9" id="bt_selecionar9" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SMicrorregião_IBGE_de_notific" ID="S9" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">11001 PORTO VELHO
+    <OPTION VALUE="2">11002 GUAJARA-MIRIM
+    <OPTION VALUE="3">11003 ARIQUEMES
+    <OPTION VALUE="4">11004 JI-PARANA
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig10" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S10','fig10','pesqmes10','listahidden10','bt_selecionar10')">
+  <LABEL for="S10">Reg.Metropolit/RIDE de notific
+  </LABEL>
+  <LABEL for="pesqmes10">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes10" class="achefacil" id="pesqmes10"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S10',listahidden10,bt_selecionar10);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden10" id="listahidden10" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S10',pesqmes10,bt_selecionar10);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar10" id="bt_selecionar10" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SReg.Metropolit/RIDE_de_notific" ID="S10" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">13010 Manaus - AM
+    <OPTION VALUE="2">14010 Capital - RR
+    <OPTION VALUE="3">14020 Sul do Estado - RR
+    <OPTION VALUE="4">14030 Central - RR
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig11" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S11','fig11','pesqmes11','listahidden11','bt_selecionar11')">
+  <LABEL for="S11">Territ da Cidadania de notific
+  </LABEL>
+  <LABEL for="pesqmes11">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes11" class="achefacil" id="pesqmes11"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S11',listahidden11,bt_selecionar11);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden11" id="listahidden11" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S11',pesqmes11,bt_selecionar11);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar11" id="bt_selecionar11" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="STerrit_da_Cidadania_de_notific" ID="S11" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">001 A&ccedil;u-Mossor&oacute; - RN
+    <OPTION VALUE="2">002 Agreste Meridional - PE
+    <OPTION VALUE="3">004 Alto Acre e Capixaba - AC
+    <OPTION VALUE="4">005 Alto Jequitinhonha - MG
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig12" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S12','fig12','pesqmes12','listahidden12','bt_selecionar12')">
+  <LABEL for="S12">Mesorregi&atilde;o PNDR de notific
+  </LABEL>
+  <LABEL for="pesqmes12">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes12" class="achefacil" id="pesqmes12"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S12',listahidden12,bt_selecionar12);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden12" id="listahidden12" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S12',pesqmes12,bt_selecionar12);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar12" id="bt_selecionar12" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SMesorregião_PNDR_de_notific" ID="S12" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">001 Grande Fronteira do Mercosul
+    <OPTION VALUE="2">002 Alto Solim&otilde;es
+    <OPTION VALUE="3">003 Xingu
+    <OPTION VALUE="4">004 Chapada do Araripe
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig13" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S13','fig13','','','')">
+  <LABEL for="S13">Amaz&ocirc;nia Legal (notifica&ccedil;&atilde;o)
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SAmazônia_Legal_(notificação)" ID="S13" SIZE=3 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Sim
+    <OPTION VALUE="2">N&atilde;o
+  </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig14" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S14','fig14','','','')">
+  <LABEL for="S14">Semi&aacute;rido (notifica&ccedil;&atilde;o)
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SSemiárido_(notificação)" ID="S14" SIZE=3 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Sim
+    <OPTION VALUE="2">N&atilde;o
+  </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig15" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S15','fig15','','','')">
+  <LABEL for="S15">Faixa de Fronteira (notific)
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SFaixa_de_Fronteira_(notific)" ID="S15" SIZE=3 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Sim
+    <OPTION VALUE="2">N&atilde;o
+  </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig16" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S16','fig16','','','')">
+  <LABEL for="S16">Zona de Fronteira (notific)
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SZona_de_Fronteira_(notific)" ID="S16" SIZE=3 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Sim
+    <OPTION VALUE="2">N&atilde;o
+  </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig17" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S17','fig17','','','')">
+  <LABEL for="S17">Munic extrem pobreza (notific)
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SMunic_extrem_pobreza_(notific)" ID="S17" SIZE=3 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Sim
+    <OPTION VALUE="2">N&atilde;o
+  </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig18" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S18','fig18','pesqmes18','listahidden18','bt_selecionar18')">
+  <LABEL for="S18">Pa&iacute;s de resid&ecirc;ncia
+  </LABEL>
+  <LABEL for="pesqmes18">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes18" class="achefacil" id="pesqmes18"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S18',listahidden18,bt_selecionar18);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden18" id="listahidden18" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S18',pesqmes18,bt_selecionar18);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar18" id="bt_selecionar18" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SPaís_de_residência" ID="S18" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">220  ILHAS GEORGIA DO SUL E ILHAS SANDWICH DO SUL
+    <OPTION VALUE="2">227  ILHAS SANTA HELENA
+    <OPTION VALUE="3">228  ILHAS TOKELAU
+    <OPTION VALUE="4">230  SERVIA
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig19" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S19','fig19','','','')">
+  <LABEL for="S19">Regi&atilde;o de resid&ecirc;ncia
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SRegião_de_residência" ID="S19" SIZE=7 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">1 Regi&atilde;o Norte
+    <OPTION VALUE="2">2 Regi&atilde;o Nordeste
+    <OPTION VALUE="3">3 Regi&atilde;o Sudeste
+    <OPTION VALUE="4">4 Regi&atilde;o Sul
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig20" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S20','fig20','pesqmes20','listahidden20','bt_selecionar20')">
+  <LABEL for="S20">UF de resid&ecirc;ncia
+  </LABEL>
+  <LABEL for="pesqmes20">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes20" class="achefacil" id="pesqmes20"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S20',listahidden20,bt_selecionar20);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden20" id="listahidden20" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S20',pesqmes20,bt_selecionar20);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar20" id="bt_selecionar20" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SUF_de_residência" ID="S20" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Acre
+    <OPTION VALUE="2">Alagoas
+    <OPTION VALUE="3">Amap&aacute;
+    <OPTION VALUE="4">Amazonas
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig21" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S21','fig21','pesqmes21','listahidden21','bt_selecionar21')">
+  <LABEL for="S21">Munic&iacute;pio de resid&ecirc;ncia
+  </LABEL>
+  <LABEL for="pesqmes21">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes21" class="achefacil" id="pesqmes21"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S21',listahidden21,bt_selecionar21);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden21" id="listahidden21" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S21',pesqmes21,bt_selecionar21);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar21" id="bt_selecionar21" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SMunicípio_de_residência" ID="S21" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1"> MUNICIPIO IGNORADO - RO
+    <OPTION VALUE="2">110001 ALTA FLORESTA D'OESTE
+    <OPTION VALUE="3">110002 ARIQUEMES
+    <OPTION VALUE="4">110003 CABIXI
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig22" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S22','fig22','pesqmes22','listahidden22','bt_selecionar22')">
+  <LABEL for="S22">Capital de resid&ecirc;ncia
+  </LABEL>
+  <LABEL for="pesqmes22">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes22" class="achefacil" id="pesqmes22"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S22',listahidden22,bt_selecionar22);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden22" id="listahidden22" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S22',pesqmes22,bt_selecionar22);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar22" id="bt_selecionar22" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SCapital_de_residência" ID="S22" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">110020 Porto Velho
+    <OPTION VALUE="2">120040 Rio Branco
+    <OPTION VALUE="3">130260 Manaus
+    <OPTION VALUE="4">140010 Boa Vista
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig23" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S23','fig23','pesqmes23','listahidden23','bt_selecionar23')">
+  <LABEL for="S23">Regi&atilde;o de Sa&uacute;de (CIR) de resid
+  </LABEL>
+  <LABEL for="pesqmes23">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes23" class="achefacil" id="pesqmes23"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S23',listahidden23,bt_selecionar23);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden23" id="listahidden23" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S23',pesqmes23,bt_selecionar23);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar23" id="bt_selecionar23" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SRegião_de_Saúde_(CIR)_de_resid" ID="S23" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">11001 Vale do Jamari
+    <OPTION VALUE="2">11002 Caf&eacute;
+    <OPTION VALUE="3">11003 Central
+    <OPTION VALUE="4">11004 Madeira-Mamor&eacute;
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig24" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S24','fig24','pesqmes24','listahidden24','bt_selecionar24')">
+  <LABEL for="S24">Macrorreg.de Sa&uacute;de de resid&ecirc;nc
+  </LABEL>
+  <LABEL for="pesqmes24">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes24" class="achefacil" id="pesqmes24"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S24',listahidden24,bt_selecionar24);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden24" id="listahidden24" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S24',pesqmes24,bt_selecionar24);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar24" id="bt_selecionar24" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SMacrorreg.de_Saúde_de_residênc" ID="S24" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">1101 MACRORREGIONAL II (CACOAL)
+    <OPTION VALUE="2">1102 MACRORREGIAO I - PORTO VELHO
+    <OPTION VALUE="3">Ignorado - RO
+    <OPTION VALUE="4">1201 MACRO UNICA - AC
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig25" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S25','fig25','pesqmes25','listahidden25','bt_selecionar25')">
+  <LABEL for="S25">Microrregi&atilde;o IBGE de resid&ecirc;nc
+  </LABEL>
+  <LABEL for="pesqmes25">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes25" class="achefacil" id="pesqmes25"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S25',listahidden25,bt_selecionar25);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden25" id="listahidden25" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S25',pesqmes25,bt_selecionar25);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar25" id="bt_selecionar25" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SMicrorregião_IBGE_de_residênc" ID="S25" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">11001 PORTO VELHO
+    <OPTION VALUE="2">11002 GUAJARA-MIRIM
+    <OPTION VALUE="3">11003 ARIQUEMES
+    <OPTION VALUE="4">11004 JI-PARANA
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig26" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S26','fig26','pesqmes26','listahidden26','bt_selecionar26')">
+  <LABEL for="S26">Reg.Metropolit/RIDE de resid
+  </LABEL>
+  <LABEL for="pesqmes26">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes26" class="achefacil" id="pesqmes26"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S26',listahidden26,bt_selecionar26);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden26" id="listahidden26" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S26',pesqmes26,bt_selecionar26);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar26" id="bt_selecionar26" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SReg.Metropolit/RIDE_de_resid" ID="S26" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">13010 Manaus - AM
+    <OPTION VALUE="2">14010 Capital - RR
+    <OPTION VALUE="3">14020 Sul do Estado - RR
+    <OPTION VALUE="4">14030 Central - RR
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig27" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S27','fig27','pesqmes27','listahidden27','bt_selecionar27')">
+  <LABEL for="S27">Territ da Cidadania de resid
+  </LABEL>
+  <LABEL for="pesqmes27">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes27" class="achefacil" id="pesqmes27"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S27',listahidden27,bt_selecionar27);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden27" id="listahidden27" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S27',pesqmes27,bt_selecionar27);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar27" id="bt_selecionar27" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="STerrit_da_Cidadania_de_resid" ID="S27" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">001 A&ccedil;u-Mossor&oacute; - RN
+    <OPTION VALUE="2">002 Agreste Meridional - PE
+    <OPTION VALUE="3">004 Alto Acre e Capixaba - AC
+    <OPTION VALUE="4">005 Alto Jequitinhonha - MG
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig28" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S28','fig28','pesqmes28','listahidden28','bt_selecionar28')">
+  <LABEL for="S28">Mesorregi&atilde;o PNDR de resid&ecirc;nc
+  </LABEL>
+  <LABEL for="pesqmes28">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes28" class="achefacil" id="pesqmes28"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S28',listahidden28,bt_selecionar28);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden28" id="listahidden28" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S28',pesqmes28,bt_selecionar28);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar28" id="bt_selecionar28" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SMesorregião_PNDR_de_residênc" ID="S28" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">001 Grande Fronteira do Mercosul
+    <OPTION VALUE="2">002 Alto Solim&otilde;es
+    <OPTION VALUE="3">003 Xingu
+    <OPTION VALUE="4">004 Chapada do Araripe
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig29" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S29','fig29','','','')">
+  <LABEL for="S29">Amaz&ocirc;nia Legal (resid&ecirc;ncia)
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SAmazônia_Legal_(residência)" ID="S29" SIZE=3 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Sim
+    <OPTION VALUE="2">N&atilde;o
+  </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig30" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S30','fig30','','','')">
+  <LABEL for="S30">Semi&aacute;rido (resid&ecirc;ncia)
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SSemiárido_(residência)" ID="S30" SIZE=3 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Sim
+    <OPTION VALUE="2">N&atilde;o
+  </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig31" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S31','fig31','','','')">
+  <LABEL for="S31">Faixa de Fronteira (resid&ecirc;nc)
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SFaixa_de_Fronteira_(residênc)" ID="S31" SIZE=3 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Sim
+    <OPTION VALUE="2">N&atilde;o
+  </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig32" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S32','fig32','','','')">
+  <LABEL for="S32">Zona de Fronteira (resid&ecirc;nc)
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SZona_de_Fronteira_(residênc)" ID="S32" SIZE=3 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Sim
+    <OPTION VALUE="2">N&atilde;o
+  </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig33" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S33','fig33','','','')">
+  <LABEL for="S33">Munic extrem pobreza (resid)
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SMunic_extrem_pobreza_(resid)" ID="S33" SIZE=3 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Sim
+    <OPTION VALUE="2">N&atilde;o
+  </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig34" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S34','fig34','','','')">
+  <LABEL for="S34">Faixa Et&aacute;ria
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SFaixa_Etária" ID="S34" SIZE=8 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Em branco/IGN
+    <OPTION VALUE="2">at&eacute; 6 dias
+    <OPTION VALUE="3">7-27 dias
+    <OPTION VALUE="4">28 dias a <1 ano
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig35" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S35','fig35','','','')">
+  <LABEL for="S35">Ra&ccedil;a
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SRaça" ID="S35" SIZE=7 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Ign/Branco
+    <OPTION VALUE="2">Branca
+    <OPTION VALUE="3">Preta
+    <OPTION VALUE="4">Amarela
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig36" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S36','fig36','','','')">
+  <LABEL for="S36">Sexo
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SSexo" ID="S36" SIZE=5 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Em Branco
+    <OPTION VALUE="2">Ignorado
+    <OPTION VALUE="3">Masculino
+    <OPTION VALUE="4">Feminino
+  </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig37" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S37','fig37','pesqmes37','listahidden37','bt_selecionar37')">
+  <LABEL for="S37">Fx Etaria M&atilde;e
+  </LABEL>
+  <LABEL for="pesqmes37">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes37" class="achefacil" id="pesqmes37"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S37',listahidden37,bt_selecionar37);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden37" id="listahidden37" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S37',pesqmes37,bt_selecionar37);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar37" id="bt_selecionar37" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SFx_Etaria_Mãe" ID="S37" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Ignorado
+    <OPTION VALUE="2">Em branco
+    <OPTION VALUE="3">=< 9 Anos
+    <OPTION VALUE="4">10-14
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig38" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S38','fig38','pesqmes38','listahidden38','bt_selecionar38')">
+  <LABEL for="S38">Escolar m&atilde;e
+  </LABEL>
+  <LABEL for="pesqmes38">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes38" class="achefacil" id="pesqmes38"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S38',listahidden38,bt_selecionar38);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden38" id="listahidden38" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S38',pesqmes38,bt_selecionar38);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar38" id="bt_selecionar38" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SEscolar_mãe" ID="S38" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Ign/Branco
+    <OPTION VALUE="2">Analfabeto
+    <OPTION VALUE="3">1ª a 4ª s&eacute;rie incompleta do EF
+    <OPTION VALUE="4">4ª s&eacute;rie completa do EF
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig39" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S39','fig39','','','')">
+  <LABEL for="S39">Realizou Pr&eacute;-Natal
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SRealizou_Pré-Natal" ID="S39" SIZE=4 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Ign/Branco
+    <OPTION VALUE="2">Sim
+    <OPTION VALUE="3">N&atilde;o
+  </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig40" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S40','fig40','','','')">
+  <LABEL for="S40">S&iacute;filis materna
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SSífilis_materna" ID="S40" SIZE=6 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Ign/Branco
+    <OPTION VALUE="2">Durante o pr&eacute;-natal
+    <OPTION VALUE="3">No momento do parto/curetagem
+    <OPTION VALUE="4">Ap&oacute;s o parto
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig41" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S41','fig41','pesqmes41','listahidden41','bt_selecionar41')">
+  <LABEL for="S41">Ano Inic Trat M&atilde;e
+  </LABEL>
+  <LABEL for="pesqmes41">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes41" class="achefacil" id="pesqmes41"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S41',listahidden41,bt_selecionar41);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden41" id="listahidden41" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S41',pesqmes41,bt_selecionar41);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar41" id="bt_selecionar41" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SAno_Inic_Trat_Mãe" ID="S41" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Em Branco/ign
+    <OPTION VALUE="2"><1975
+    <OPTION VALUE="3">1975
+    <OPTION VALUE="4">1976
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig42" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S42','fig42','pesqmes42','listahidden42','bt_selecionar42')">
+  <LABEL for="S42">Mes Inic Trat M&atilde;e
+  </LABEL>
+  <LABEL for="pesqmes42">&nbsp;
+  </LABEL><br />
+  <input name="pesqmes42" class="achefacil" id="pesqmes42"  value="Digite o texto e ache fácil"
+    onkeyup="acha(this,'S42',listahidden42,bt_selecionar42);"
+    onfocus="this.value = '';"
+    onkeypress="if(event.keyCode==13)return false;" />
+  <select name="listahidden42" id="listahidden42" class="boxescondido" multiple size=10
+    onblur="achaopcao(this,'S42',pesqmes42,bt_selecionar42);"></select>
+  <input type="button" class="botaoescondido" name="bt_selecionar42" id="bt_selecionar42" value="" />
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SMes_Inic_Trat_Mãe" ID="S42" SIZE=10 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Ign/Branco
+    <OPTION VALUE="2">Janeiro
+    <OPTION VALUE="3">Fevereiro
+    <OPTION VALUE="4">Marco
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig43" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S43','fig43','','','')">
+  <LABEL for="S43">Trat parceiro
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="STrat_parceiro" ID="S43" SIZE=4 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Ign/Branco
+    <OPTION VALUE="2">Sim
+    <OPTION VALUE="3">N&atilde;o
+  </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig44" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S44','fig44','','','')">
+  <LABEL for="S44">Classif. Final
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SClassif._Final" ID="S44" SIZE=6 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Ign/Branco
+    <OPTION VALUE="2">S&iacute;filis Cong&ecirc;nita Recente
+    <OPTION VALUE="3">S&iacute;filis Cong&ecirc;nita Tardia
+    <OPTION VALUE="4">Natimorto/Aborto por S&iacute;filis
+    </SELECT>
+</div>
+<P>
+<div class="titulo_select"><img id="fig45" src="/cgi/imagem/ico_mais_t.png"
+  onclick="exibirselect('S45','fig45','','','')">
+  <LABEL for="S45">Evolu&ccedil;&atilde;o
+  </LABEL>
+  <SELECT scrolling="auto" class="fundo_select_tabnet" NAME="SEvolução" ID="S45" SIZE=5 MULTIPLE><OPTION VALUE="TODAS_AS_CATEGORIAS__" SELECTED >Todas as categorias
+    <OPTION VALUE="1">Ign/Branco
+    <OPTION VALUE="2">Vivo
+    <OPTION VALUE="3">&Oacute;bito pelo agravo notificado
+    <OPTION VALUE="4">&Oacute;bito por outra causa
+  </SELECT>
+</div>
+<P>
+<P>
+</div>
+</div>
+<div class="input">
+  <div class="marcadores">
+    <div  class="esq">
+      <input type="checkbox" name="opcoes" id="O" VALUE="ordenar" onclick ="marcaTodos(this,O1);"><label for="O">Ordenar pelos valores da coluna</label>&nbsp;&nbsp;
+      <input type="checkbox" name="zeradas" id="Z" VALUE="exibirlz"onclick ="marcaTodos(this,Z1);"><label for="Z">Exibir linhas zeradas</label>
+    </div>
+    <div class="dir">
+      <label class="formato" for="F">Formato</label>
+      <input type="radio" name="formato" id="F" VALUE="table" CHECKED onclick="selecao_sincrona(this.form,formato,formato1)">Tabela com bordas
+      <input type="radio" name="formato" id="F" VALUE="pre" onclick="selecao_sincrona(this.form,formato,formato1)">Texto pr&eacute;-formatado
+      <input type="radio" name="formato" id="F" VALUE="prn" onclick="selecao_sincrona(this.form,formato,formato1)">Colunas separadas por ";" <br />
+    </div>
+  </div>
+  <div class="botoes">
+    <input class="mostra" name="mostre" type="submit" VALUE=Mostra>
+    <input class="limpa" name="limpa" type="reset" VALUE=Limpa><br />
+  </div>
+</div>
+</FORM>
+</div>
+<div class="rodape_htm">
+ Fonte: Ministério da Saúde/SVSA - Sistema de Informação de Agravos de Notificação - Sinan Net<br><br>
+ <b>Notas:</b>
+ <ol>
+ <li>Períodos Disponíveis ou Período - Correspondem aos anos de notificação dos casos.
+ <li>Para tabular os dados de Sífilis acesse o Caderno de Análise, pelo link: <a href="http://portalsinan.saude.gov.br/doencas-e-agravos">http://portalsinan.saude.gov.br/doencas-e-agravos</a>
+ <li>Dados de 2007 a junho de 2025 atualizados em 30/06/2025, dados sujeitos a revisão.
+ <li>Os dados do Espírito Santo, notificados no sistema de informação e-SUS VS,
+ foram compilados nos bancos do Sinan dos respectivos anos de notificação. Sua última atualização foi em 30/06/2025.
+ <br><br>* Dados disponibilizados no TABNET em agosto de 2026
+ </ol>
+<hr class="escondido" align=center width="100%" size="2" />
+
+<table class="escondido" border="0">
+   <tr valign="middle" align="center">
+      <td>
+         <a href="https://datasus.saude.gov.br/transferencia-de-arquivos/">
+            <img src="http://tabnet.datasus.gov.br/cgi/imagem/tabwin.gif" height="66" border="0" alt="Nova Versão - 30/10/2009"></a></td>
+      <td>
+         <a href="https://datasus.saude.gov.br/transferencia-de-arquivos/"> Veja a versão do Tab para Windows (TABWIN)</a></td>
+   </tr>
+   </table>
+
+<hr class="escondido" align=center width="100%" size="2" />
+
+</div>
+</div>
+</BODY></HTML>

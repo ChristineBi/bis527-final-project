@@ -1,0 +1,8 @@
+duckdb>=1.5.3
+geobr>=2.1
+numpy
+pandas
+pyarrow
+pyreaddbc>=2.0
+pytest
+shapely>=2.0

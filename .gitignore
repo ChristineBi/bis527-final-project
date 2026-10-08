@@ -1,0 +1,7 @@
+data/raw/
+data/processed/
+db/
+logs/
+.venv/
+__pycache__/
+.pytest_cache/
