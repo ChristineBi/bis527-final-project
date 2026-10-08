@@ -6,14 +6,17 @@ loads it into a DuckDB database, and checks it.
 
 ## Setup (once)
 
-Needs Python 3.10 or newer. With conda:
+Needs Python 3.10 or newer and conda.
 
 ```bash
-cd ~/bis527-final-project
+git clone https://github.com/ChristineBi/bis527-final-project.git
+cd bis527-final-project
 conda create -n bis527 python=3.12 -y
 conda activate bis527
 pip install -r requirements.txt
 ```
+
+To get teammates' later changes: `git pull`.
 
 ## Run
 
