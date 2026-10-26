@@ -1,0 +1,86 @@
+check,year,value,expected,status,note
+health regions in the mapping,,450,450,pass,
+municipalities without a health region,,0,0,pass,
+municipalities listed twice in the mapping,,0,0,pass,
+health regions that cross a state line,,0,0,pass,
+rows in region_panel.csv,,5400,5400,pass,
+"duplicate (health_region, year) keys",,0,0,pass,
+missing values in region_panel.csv,,0,0,pass,
+region-years with births <= 0,,0,0,pass,
+region-years with zero congenital cases,,236,,info,real zeros: no case reported for any town in the region
+congenital cases: municipalities vs regions,2013,14114,14114,pass,
+births: municipalities vs regions,2013,2903867,2903867,pass,
+congenital cases: municipalities vs regions,2014,16491,16491,pass,
+births: municipalities vs regions,2014,2979133,2979133,pass,
+congenital cases: municipalities vs regions,2015,19914,19914,pass,
+births: municipalities vs regions,2015,3017563,3017563,pass,
+congenital cases: municipalities vs regions,2016,21547,21547,pass,
+births: municipalities vs regions,2016,2857704,2857704,pass,
+congenital cases: municipalities vs regions,2017,25365,25365,pass,
+births: municipalities vs regions,2017,2923441,2923441,pass,
+congenital cases: municipalities vs regions,2018,26849,26849,pass,
+births: municipalities vs regions,2018,2944826,2944826,pass,
+congenital cases: municipalities vs regions,2019,25394,25394,pass,
+births: municipalities vs regions,2019,2849064,2849064,pass,
+congenital cases: municipalities vs regions,2020,23470,23470,pass,
+births: municipalities vs regions,2020,2730050,2730050,pass,
+congenital cases: municipalities vs regions,2021,27120,27120,pass,
+births: municipalities vs regions,2021,2677008,2677008,pass,
+congenital cases: municipalities vs regions,2022,26535,26535,pass,
+births: municipalities vs regions,2022,2561858,2561858,pass,
+congenital cases: municipalities vs regions,2023,25018,25018,pass,
+births: municipalities vs regions,2023,2537511,2537511,pass,
+congenital cases: municipalities vs regions,2024,24442,24442,pass,
+births: municipalities vs regions,2024,2389271,2389271,pass,
+congenital cases: national total vs included in panel,2013,14114,14115,info,1 left out (unknown municipality); see exclusions_log.csv
+congenital cases: national total vs included in panel,2014,16491,16491,info,0 left out (unknown municipality); see exclusions_log.csv
+congenital cases: national total vs included in panel,2015,19914,19914,info,0 left out (unknown municipality); see exclusions_log.csv
+congenital cases: national total vs included in panel,2016,21547,21547,info,0 left out (unknown municipality); see exclusions_log.csv
+congenital cases: national total vs included in panel,2017,25365,25367,info,2 left out (unknown municipality); see exclusions_log.csv
+congenital cases: national total vs included in panel,2018,26849,26851,info,2 left out (unknown municipality); see exclusions_log.csv
+congenital cases: national total vs included in panel,2019,25394,25395,info,1 left out (unknown municipality); see exclusions_log.csv
+congenital cases: national total vs included in panel,2020,23470,23470,info,0 left out (unknown municipality); see exclusions_log.csv
+congenital cases: national total vs included in panel,2021,27120,27120,info,0 left out (unknown municipality); see exclusions_log.csv
+congenital cases: national total vs included in panel,2022,26535,26536,info,1 left out (unknown municipality); see exclusions_log.csv
+congenital cases: national total vs included in panel,2023,25018,25018,info,0 left out (unknown municipality); see exclusions_log.csv
+congenital cases: national total vs included in panel,2024,24442,24443,info,1 left out (unknown municipality); see exclusions_log.csv
+births: national total vs included in panel,2013,2903867,2904027,info,160 left out (unknown municipality); see exclusions_log.csv
+births: national total vs included in panel,2014,2979133,2979259,info,126 left out (unknown municipality); see exclusions_log.csv
+births: national total vs included in panel,2015,3017563,3017668,info,105 left out (unknown municipality); see exclusions_log.csv
+births: national total vs included in panel,2016,2857704,2857800,info,96 left out (unknown municipality); see exclusions_log.csv
+births: national total vs included in panel,2017,2923441,2923535,info,94 left out (unknown municipality); see exclusions_log.csv
+births: national total vs included in panel,2018,2944826,2944932,info,106 left out (unknown municipality); see exclusions_log.csv
+births: national total vs included in panel,2019,2849064,2849146,info,82 left out (unknown municipality); see exclusions_log.csv
+births: national total vs included in panel,2020,2730050,2730145,info,95 left out (unknown municipality); see exclusions_log.csv
+births: national total vs included in panel,2021,2677008,2677101,info,93 left out (unknown municipality); see exclusions_log.csv
+births: national total vs included in panel,2022,2561858,2561922,info,64 left out (unknown municipality); see exclusions_log.csv
+births: national total vs included in panel,2023,2537511,2537576,info,65 left out (unknown municipality); see exclusions_log.csv
+births: national total vs included in panel,2024,2389271,2389325,info,54 left out (unknown municipality); see exclusions_log.csv
+national congenital cases vs bulletin,2024,24443,24443,pass,"Boletim Epidemiologico de Sifilis 2025, Table 1"
+national births vs bulletin denominator,2023,2537576,2537576,pass,the bulletin divides 2024 cases by 2023 births
+congenital_cases: TabNet query is by residence and year,,True,True,pass,retrieved 2026-10-26 02:40 UTC
+births: TabNet query is by residence and year,,True,True,pass,retrieved 2026-10-26 02:41 UTC
+congenital_cases: database vs raw TabNet page,2013,14115,14115,pass,
+congenital_cases: database vs raw TabNet page,2014,16491,16491,pass,
+congenital_cases: database vs raw TabNet page,2015,19914,19914,pass,
+congenital_cases: database vs raw TabNet page,2016,21547,21547,pass,
+congenital_cases: database vs raw TabNet page,2017,25367,25367,pass,
+congenital_cases: database vs raw TabNet page,2018,26851,26851,pass,
+congenital_cases: database vs raw TabNet page,2019,25395,25395,pass,
+congenital_cases: database vs raw TabNet page,2020,23470,23470,pass,
+congenital_cases: database vs raw TabNet page,2021,27120,27120,pass,
+congenital_cases: database vs raw TabNet page,2022,26536,26536,pass,
+congenital_cases: database vs raw TabNet page,2023,25018,25018,pass,
+congenital_cases: database vs raw TabNet page,2024,24443,24443,pass,
+births: database vs raw TabNet page,2013,2904027,2904027,pass,
+births: database vs raw TabNet page,2014,2979259,2979259,pass,
+births: database vs raw TabNet page,2015,3017668,3017668,pass,
+births: database vs raw TabNet page,2016,2857800,2857800,pass,
+births: database vs raw TabNet page,2017,2923535,2923535,pass,
+births: database vs raw TabNet page,2018,2944932,2944932,pass,
+births: database vs raw TabNet page,2019,2849146,2849146,pass,
+births: database vs raw TabNet page,2020,2730145,2730145,pass,
+births: database vs raw TabNet page,2021,2677101,2677101,pass,
+births: database vs raw TabNet page,2022,2561922,2561922,pass,
+births: database vs raw TabNet page,2023,2537576,2537576,pass,
+births: database vs raw TabNet page,2024,2389325,2389325,pass,

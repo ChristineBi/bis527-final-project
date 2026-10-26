@@ -44,7 +44,9 @@ def run():
         hr_name = pick(hr.columns, "name_health_region")
         regions = pd.DataFrame({
             "code7": hr["code_muni"].astype("int64").astype(str),
-            "health_region": hr[hr_code].astype(str),
+            # plain integer codes as text: '11005', not '11005.0'
+            "health_region": pd.to_numeric(hr[hr_code]).astype("Int64")
+                               .astype(str),
             "health_region_name": hr[hr_name],
         }).drop_duplicates("code7")
         table = table.merge(regions, on="code7", how="left")

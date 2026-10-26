@@ -1,4 +1,4 @@
-duckdb>=1.5.3
+duckdb>=1.5.3,<2
 geobr>=2.1
 numpy
 pandas

@@ -3,7 +3,7 @@
     python run_pipeline.py              # every step
     python run_pipeline.py tabnet       # just one step
 
-Steps, in order: tabnet, boundaries, build, check.
+Steps, in order: tabnet, boundaries, build, check, region.
 
 Optional steps, not run by default: download and convert fetch the raw
 SINAN/SINASC microdata files from the DATASUS FTP server. That server does
@@ -14,7 +14,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-STEPS = ["tabnet", "boundaries", "build", "check"]
+STEPS = ["tabnet", "boundaries", "build", "check", "region"]
 OPTIONAL_STEPS = ["download", "convert"]
 LOG_DIR = Path(__file__).resolve().parent / "logs"
 
@@ -67,6 +67,9 @@ def main(args):
         elif step == "check":
             from pipeline import check
             check.run()
+        elif step == "region":
+            from pipeline import region
+            region.run()
         print(f"({step} took {time.time() - start:.0f}s)")
     if problems:
         print("\nProblems to look at:")
