@@ -35,6 +35,7 @@ You can also run one step at a time, for example
 | `boundaries` | Downloads municipal boundaries (2022) and health regions (2023) with the geobr package. |
 | `build` | Loads everything into `db/syphilis.duckdb` and saves the analysis panel as `data/processed/panel.csv`. |
 | `check` | Writes `data/processed/check_report.txt`: yearly national totals, the 2024 totals next to the Ministry's bulletin, and how many counts could not be placed in a municipality. |
+| `region` | Builds the health-region-year panel (`data/shared/region_panel.csv`) with its checks (`data_checks.csv`) and exclusions log (`exclusions_log.csv`). See `docs/data_dictionary.md`. |
 
 ## Why TabNet
 
@@ -55,6 +56,14 @@ not accept connections from outside Brazil. The optional `download` and
 `convert` steps (`pipeline/download.py`, `pipeline/convert.py`,
 `pipeline/dbf.py`) can fetch and read them from a Brazilian connection if we
 ever need record-level data.
+
+## Health-region panel (the main analysis file)
+
+`data/shared/region_panel.csv` has one row per health region and year
+(450 × 12 = 5,400 rows): congenital cases `Y`, live births `B`, and the rate
+per 1,000 births. It is kept in Git, so you can use it without running the
+pipeline. Column definitions, rules and how to reproduce a regional total are
+in `docs/data_dictionary.md`; every check is in `data/shared/data_checks.csv`.
 
 ## Using the database
 
@@ -97,4 +106,4 @@ panel = con.sql("SELECT * FROM panel").df()
   `scripts/match_priority_list.py`.
 - `tests/test_tabnet.py` checks the TabNet parsing against saved real
   pages and runs without internet; `tests/test_data.py` checks the built
-  database.
+  database; `tests/test_region.py` checks the health-region panel.
