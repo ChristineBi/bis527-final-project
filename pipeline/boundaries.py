@@ -1,15 +1,22 @@
-"""Download municipal boundaries and health regions with geobr (IPEA).
+"""Download municipal boundaries with geobr (IPEA) and add health regions.
 
 Writes data/processed/municipalities.parquet with one row per
 municipality: 7-digit IBGE code, 6-digit code, name, state, health region,
 a representative point, and the full-resolution boundary as WKB so the
 database can build neighbor networks later.
+
+Health regions come from data/reference/health_regions_2023.csv, our saved
+copy of geobr's 2023 health-region file. Newer geobr data releases no
+longer include that year, so we do not download it anymore.
 """
 import geobr
 import pandas as pd
 import shapely
 
-from .config import BOUNDARY_YEAR, HEALTH_REGION_YEAR, PROCESSED
+from .config import BOUNDARY_YEAR, HEALTH_REGION_YEAR, PROCESSED, ROOT
+
+HEALTH_REGIONS = (ROOT / "data" / "reference"
+                  / f"health_regions_{HEALTH_REGION_YEAR}.csv")
 
 
 def pick(columns, *candidates):
@@ -37,25 +44,15 @@ def run():
         "geom_wkb": shapely.to_wkb(muni.geometry.values),
     })
 
-    print(f"boundaries: downloading health regions ({HEALTH_REGION_YEAR})")
-    try:
-        hr = geobr.read_health_region(year=HEALTH_REGION_YEAR)
-        hr_code = pick(hr.columns, "code_health_region")
-        hr_name = pick(hr.columns, "name_health_region")
-        regions = pd.DataFrame({
-            "code7": hr["code_muni"].astype("int64").astype(str),
-            # plain integer codes as text: '11005', not '11005.0'
-            "health_region": pd.to_numeric(hr[hr_code]).astype("Int64")
-                               .astype(str),
-            "health_region_name": hr[hr_name],
-        }).drop_duplicates("code7")
-        table = table.merge(regions, on="code7", how="left")
-        unmatched = table["health_region"].isna().sum()
-        print(f"  {unmatched} municipalities without a health region")
-    except Exception as err:  # health regions are only needed later
-        print(f"  WARNING: health regions not loaded ({err})")
-        table["health_region"] = None
-        table["health_region_name"] = None
+    print(f"boundaries: adding health regions ({HEALTH_REGION_YEAR}) "
+          f"from {HEALTH_REGIONS.name}")
+    regions = pd.read_csv(HEALTH_REGIONS, dtype=str)
+    table = table.merge(regions, on="code7", how="left")
+    unmatched = table["health_region"].isna().sum()
+    print(f"  {unmatched} municipalities without a health region")
+    if unmatched:
+        raise ValueError(f"{unmatched} municipalities have no health region; "
+                         f"check {HEALTH_REGIONS}")
 
     out = PROCESSED / "municipalities.parquet"
     table.to_parquet(out, index=False)

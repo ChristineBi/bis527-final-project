@@ -32,7 +32,7 @@ You can also run one step at a time, for example
 | Step | What it does |
 |------|--------------|
 | `tabnet` | Downloads counts from DATASUS TabNet: syphilis in pregnancy and congenital syphilis by mother's municipality of residence and year of diagnosis (SINAN), live births by mother's municipality of residence and year (SINASC), and congenital cases by prenatal care and by when the mother was diagnosed. Raw responses are kept in `data/raw/tabnet/` with a manifest of every query. |
-| `boundaries` | Downloads municipal boundaries (2022) and health regions (2023) with the geobr package. |
+| `boundaries` | Downloads municipal boundaries (2022) with the geobr package and adds each municipality's health region (2023) from `data/reference/health_regions_2023.csv`. |
 | `build` | Loads everything into `db/syphilis.duckdb` and saves the analysis panel as `data/processed/panel.csv`. |
 | `check` | Writes `data/processed/check_report.txt`: yearly national totals, the 2024 totals next to the Ministry's bulletin, and how many counts could not be placed in a municipality. |
 | `region` | Builds the health-region-year panel (`data/shared/region_panel.csv`) with its checks (`data_checks.csv`) and exclusions log (`exclusions_log.csv`). See `docs/data_dictionary.md`. |
@@ -101,6 +101,10 @@ panel = con.sql("SELECT * FROM panel").df()
 - Cases whose municipality is unknown ("Ignorado ou exterior") are kept in
   the `tabnet_*` tables with an empty `code6` but are not in `panel`.
 - TabNet data are as of June 30, 2025, and 2024 is still preliminary.
+- `data/reference/health_regions_2023.csv` is our saved copy of geobr's 2023
+  health regions (municipality code, region code, region name). Newer geobr
+  data releases no longer include 2023, so the pipeline reads this file
+  instead of downloading it. `scripts/save_health_regions.py` rebuilds it.
 - `data/reference/sifilis_nao_priority.csv` is the Ministry's 2017 list of
   100 priority municipalities, matched to IBGE codes by
   `scripts/match_priority_list.py`.

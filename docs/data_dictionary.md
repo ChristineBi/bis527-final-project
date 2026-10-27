@@ -26,7 +26,7 @@ One row per health region and year: 450 regions × 12 years (2013–2024) =
 |---|---|---|
 | `Y` | SINAN, Sífilis Congênita, via DATASUS TabNet | rows: Município de residência; columns: Ano Diagnóstico; measure: Casos confirmados; all files |
 | `B` | SINASC, Nascidos Vivos, via DATASUS TabNet | rows: Município; columns: Ano do nascimento; measure: Nascimentos por residência da mãe |
-| Regions | geobr (IPEA): municipality boundaries 2022, health regions 2023 | |
+| Regions | geobr (IPEA): municipality boundaries 2022; health regions 2023, saved in `data/reference/health_regions_2023.csv` | |
 
 The exact query sent and the download date for each table are in
 `data/raw/tabnet/manifest.csv`; the raw TabNet pages are next to it. TabNet
