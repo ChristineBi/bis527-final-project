@@ -1,0 +1,7 @@
+"d_km","median_neighbors","border_median","gap","isolated","chosen"
+50,0,6,6,321,FALSE
+100,3,6,3,108,FALSE
+150,8,6,2,45,TRUE
+200,14,6,8,23,FALSE
+250,21,6,15,15,FALSE
+300,29,6,23,11,FALSE

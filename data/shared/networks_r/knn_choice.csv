@@ -1,0 +1,9 @@
+"k","median_neighbors","border_median","gap","min","max","chosen"
+3,4,6,2,3,7,FALSE
+4,5,6,1,4,8,FALSE
+5,6,6,0,5,10,TRUE
+6,7,6,1,6,10,FALSE
+7,8,6,2,7,12,FALSE
+8,9,6,3,8,13,FALSE
+9,10,6,4,9,15,FALSE
+10,12,6,6,10,17,FALSE

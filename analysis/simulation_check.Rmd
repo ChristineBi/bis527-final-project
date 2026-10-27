@@ -1,0 +1,350 @@
+---
+title: "Simulation check of the placebo test"
+subtitle: "BIS 527: does the pipeline find a neighbor effect we planted?"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+params:
+  networks_dir: "data/shared/networks_r"
+  results_dir: "data/shared/results_r"
+  gammas: !r c(0, 0.04, 0.10)
+  n_reps: 100
+  n_placebos: 19
+  cores: 4
+  rerun: false
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include = FALSE}
+# Paths are relative to the repository root, not to analysis/.
+knitr::opts_knit$set(root.dir = normalizePath(".."))
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+Before trusting the placebo test on the real data, we check it on data where we know the answer. We keep everything real (the 450 regions, the border network, births, states, the 2013 starting rates) and simulate the case counts from M1 with a neighbor effect γ that we choose:
+
+- **γ = 0:** no neighbor effect. The real network should beat its placebos (rank p ≤ 0.05) only about 5% of the time. Much more often would mean the test is too easy.
+- **γ = 0.04:** about the size we estimate on the real data.
+- **γ = 0.10:** a strong effect.
+
+Each simulated dataset goes through the same steps as the real analysis (`border_network.Rmd`, Sections 6 and 7): M0, M1 with the real border network, M1 with 19 new within-state placebos, then T and the rank p's.
+
+Inputs: `data/shared/region_panel.csv` and the network files that `border_network.Rmd` writes to `data/shared/networks_r/` (knit that first). The simulation takes a while (about 10 minutes on 4 cores for 3 × 100 replicates), so its results are saved to `data/shared/results_r/simulation_check.csv` and read back on later knits. Set `rerun: true` to run it again.
+
+```{r packages}
+library(dplyr)
+library(MASS, exclude = "select")
+```
+
+## 1. Data and the border network
+
+```{r read}
+nodes <- read.csv(file.path(params$networks_dir, "nodes.csv"),
+                  colClasses = c(health_region = "character"))
+edges <- read.csv(file.path(params$networks_dir, "edges_border.csv"),
+                  colClasses = "character")
+codes <- nodes$health_region
+uf <- nodes$uf
+n <- length(codes)
+if (n != 450) stop("nodes.csv has ", n, " regions, not 450: re-knit border_network.Rmd first")
+
+A <- matrix(0, n, n, dimnames = list(codes, codes))
+A[cbind(match(edges$region_i, codes), match(edges$region_j, codes))] <- 1
+A <- A + t(A)
+stopifnot(isSymmetric(A), all(rowSums(A) > 0))
+W <- A / rowSums(A)
+
+region_panel <- read.csv("data/shared/region_panel.csv",
+                         colClasses = c(health_region = "character")) |>
+  filter(health_region %in% codes, year >= 2013, year <= 2022) |>
+  mutate(x = log1p(1000 * Y / B))
+years <- 2013:2022
+# The saved networks and the panel must cover the same health regions.
+stopifnot(setequal(unique(region_panel$health_region), codes))
+
+# Births as a region x year matrix, in node order.
+births <- matrix(NA_real_, n, length(years), dimnames = list(codes, years))
+births[cbind(match(region_panel$health_region, codes),
+             match(region_panel$year, years))] <- region_panel$B
+stopifnot(!anyNA(births), all(births > 0))
+c(regions = n, border_links = sum(A) / 2)
+```
+
+## 2. Model functions
+
+These are the functions from `border_network.Rmd` (Sections 6 and 7), changed only to take the panel as an argument.
+
+```{r functions}
+make_placebo <- function(A, uf, seed) {
+  set.seed(seed)
+  perm <- seq_along(uf)
+  for (s in unique(uf)) {
+    idx <- which(uf == s)
+    perm[idx] <- idx[sample.int(length(idx))]
+  }
+  A_p <- A[perm, perm]
+  dimnames(A_p) <- dimnames(A)
+  A_p
+}
+
+model_data <- function(panel, W) {
+  i <- match(panel$health_region, rownames(W))
+  j <- match(panel$year, years)
+  x <- matrix(NA_real_, nrow(W), length(years))
+  x[cbind(i, j)] <- panel$x
+  lag <- cbind(NA, x[, -length(years)])
+  nbr <- W %*% lag
+  d <- panel |>
+    mutate(own_lag = lag[cbind(i, j)], nbr = nbr[cbind(i, j)],
+           trend = year - 2014) |>
+    filter(year >= 2014)
+  train <- d$year <= 2021
+  d$Z <- (d$nbr - mean(d$nbr[train])) / sd(d$nbr[train])
+  d
+}
+
+birth_weighted_rmse <- function(Y, B, pred) {
+  sqrt(sum(B * (1000 * pred / B - 1000 * Y / B)^2) / sum(B))
+}
+
+fit_predict <- function(panel, W, with_z) {
+  d <- model_data(panel, W)
+  f <- if (with_z) {
+    Y ~ own_lag + Z + uf + trend + offset(log(B))
+  } else {
+    Y ~ own_lag + uf + trend + offset(log(B))
+  }
+  train <- d[d$year <= 2021, ]
+  test <- d[d$year == 2022, ]
+  fit <- glm.nb(f, data = train)
+  pred <- predict(fit, newdata = test, type = "response")
+  list(fit = fit,
+       score = birth_weighted_rmse(test$Y, test$B, pred),
+       gamma = if (with_z) unname(coef(fit)["Z"]) else NA)
+}
+
+rank_p <- function(real, null) (1 + sum(null >= real)) / (1 + length(null))
+```
+
+## 3. Parameters for the simulation
+
+The simulation uses the coefficients of M1 fitted to the real data with the border network, except γ, which we set. Z is standardized with the real data's training mean and SD, so γ means the same thing as in the real analysis (per SD of the neighbors' lagged rate).
+
+```{r parameters}
+real_fit <- fit_predict(region_panel, W, TRUE)$fit
+b <- coef(real_fit)
+theta <- real_fit$theta
+
+real_d <- model_data(region_panel, W)
+z_mean <- mean(real_d$nbr[real_d$year <= 2021])
+z_sd <- sd(real_d$nbr[real_d$year <= 2021])
+
+state_effect <- setNames(rep(0, length(unique(uf))), sort(unique(uf)))
+for (s in names(state_effect)[-1]) state_effect[s] <- b[[paste0("uf", s)]]
+
+c(intercept = b[["(Intercept)"]], own_lag = b[["own_lag"]],
+  real_gamma = b[["Z"]], trend = b[["trend"]], theta = theta)
+```
+
+## 4. Simulating case counts
+
+Start from the real 2013 rates. For each year t from 2014 to 2022: own_lag = x in year t − 1, Z = the standardized neighbor average of own_lag, μ = B · exp(intercept + β own_lag + γ Z + state + δ trend), and Y \~ negative binomial(μ, θ). Then x for year t is computed from the simulated Y, so each year feeds the next, through the region itself and through its neighbors.
+
+```{r simulate}
+simulate_panel <- function(gamma, seed) {
+  set.seed(seed)
+  x <- matrix(NA_real_, n, length(years))
+  y <- matrix(NA_real_, n, length(years))
+  start <- region_panel[region_panel$year == 2013, ]
+  x[match(start$health_region, codes), 1] <- start$x
+  y[match(start$health_region, codes), 1] <- start$Y
+  for (k in 2:length(years)) {
+    own_lag <- x[, k - 1]
+    z <- (as.vector(W %*% own_lag) - z_mean) / z_sd
+    eta <- b[["(Intercept)"]] + b[["own_lag"]] * own_lag + gamma * z +
+      state_effect[uf] + b[["trend"]] * (years[k] - 2014)
+    mu <- births[, k] * exp(eta)
+    y[, k] <- rnbinom(n, size = theta, mu = mu)
+    x[, k] <- log1p(1000 * y[, k] / births[, k])
+  }
+  data.frame(health_region = rep(codes, length(years)),
+             uf = rep(uf, length(years)),
+             year = rep(years, each = n),
+             Y = as.vector(y), B = as.vector(births), x = as.vector(x))
+}
+
+# Sanity check: do simulated data look like the real data? 20 simulated
+# datasets per gamma, compared with the real data year by year.
+by_year <- function(d) {
+  d |> group_by(year) |>
+    summarise(rate = 1000 * sum(Y) / sum(B), zero_share = mean(Y == 0),
+              .groups = "drop")
+}
+real_by_year <- by_year(region_panel)
+sim_by_year <- do.call(rbind, lapply(params$gammas, function(g) {
+  do.call(rbind, lapply(1:20, function(r)
+    by_year(simulate_panel(g, 9e6 + r)) |> mutate(gamma = g)))
+})) |>
+  group_by(gamma, year) |>
+  summarise(rate = mean(rate), zero_share = mean(zero_share),
+            .groups = "drop")
+
+rate_table <- real_by_year |> select(year, real = rate)
+for (g in params$gammas) {
+  rate_table[[paste0("sim_gamma_", g)]] <-
+    sim_by_year$rate[sim_by_year$gamma == g]
+}
+knitr::kable(rate_table, digits = 2,
+             caption = "Rate per 1,000 births: real vs. simulated (mean of 20)")
+
+zero_table <- real_by_year |>
+  filter(year >= 2014) |>
+  summarise(real = mean(zero_share))
+for (g in params$gammas) {
+  zero_table[[paste0("sim_gamma_", g)]] <-
+    mean(sim_by_year$zero_share[sim_by_year$gamma == g & sim_by_year$year >= 2014])
+}
+knitr::kable(zero_table, digits = 3,
+             caption = "Share of region-years with zero cases, 2014-2022")
+```
+
+- The simulation starts on track and then falls behind. M1 says each year mostly carries over from the last one (0.89), with almost *no trend* of its own. When we fit to real data, every year starts from the *real previous year*, so the model keeps up. A simulation that runs on its own compounds only what the model knows, so it levels off around 7. The real rise from 5 to 10 came from nationwide pushes year after year that M1 doesn’t explain. *Fixed year effects would capture those.*
+- *Neighbors amplify*. With γ = 0.10 the simulated rate climbs much faster, because high-rate regions push their neighbors up, and those neighbors push back. *γ = 0.04 still falls short of the real rise*, so neighbors alone don’t explain the national trend.
+- The real data have *more zero-case region-years (4.0% vs about 2.7%)*. Some regions sit lower than their state effect allows, which suggests *region-level differences M1 doesn’t model*
+
+```{r sim-plot, fig.height = 4, fig.width = 7}
+cols <- c("#1b9e77", "#7570b3", "#d95f02")
+plot(real_by_year$year, real_by_year$rate, type = "b", pch = 16, lwd = 2,
+     ylim = range(c(real_by_year$rate, sim_by_year$rate)),
+     xlab = "year", ylab = "rate per 1,000 births",
+     main = "Real (black) vs. simulated rates")
+for (k in seq_along(params$gammas)) {
+  s <- sim_by_year[sim_by_year$gamma == params$gammas[k], ]
+  lines(s$year, s$rate, type = "b", col = cols[k], lwd = 2)
+}
+legend("topleft", c("real", paste("simulated, γ =", params$gammas)),
+       col = c("black", cols), lwd = 2, bty = "n")
+```
+
+## 5. Running the pipeline on simulated data
+
+One replicate: simulate, fit M0 and M1 (real border network), then M1 with 19 placebos made with new seeds for that replicate.
+
+```{r replicate}
+one_replicate <- function(gamma, rep) {
+  seed <- round(gamma * 1e4) * 1e5 + rep * 100
+  panel <- simulate_panel(gamma, seed)
+  m0 <- fit_predict(panel, W, FALSE)$score
+  m1 <- fit_predict(panel, W, TRUE)
+  null <- t(sapply(seq_len(params$n_placebos), function(k) {
+    A_p <- make_placebo(A, uf, seed + k)
+    r <- fit_predict(panel, A_p / rowSums(A_p), TRUE)
+    c(T = m0 - r$score, gamma = r$gamma)
+  }))
+  data.frame(true_gamma = gamma, rep = rep,
+             gamma_hat = m1$gamma, T = m0 - m1$score,
+             placebo_gamma_mean = mean(null[, "gamma"]),
+             placebo_T_mean = mean(null[, "T"]),
+             gamma_rank_p = rank_p(m1$gamma, null[, "gamma"]),
+             T_rank_p = rank_p(m0 - m1$score, null[, "T"]))
+}
+```
+
+```{r run}
+sim_file <- file.path(params$results_dir, "simulation_check.csv")
+if (params$rerun || !file.exists(sim_file)) {
+  grid <- expand.grid(rep = seq_len(params$n_reps), gamma = params$gammas)
+  cores <- if (.Platform$OS.type == "windows") 1 else params$cores
+  started <- Sys.time()
+  sims <- parallel::mclapply(seq_len(nrow(grid)), function(r) {
+    one_replicate(grid$gamma[r], grid$rep[r])
+  }, mc.cores = cores)
+  failed <- !sapply(sims, is.data.frame)
+  if (any(failed)) warning(sum(failed), " replicates failed and are dropped")
+  sims <- do.call(rbind, sims[!failed])
+  dir.create(params$results_dir, showWarnings = FALSE, recursive = TRUE)
+  write.csv(sims, sim_file, row.names = FALSE)
+  message("simulation took ", format(Sys.time() - started))
+}
+sims <- read.csv(sim_file)
+table(true_gamma = sims$true_gamma)
+```
+
+## 6. Results
+
+```{r summary}
+sims |>
+  group_by(true_gamma) |>
+  summarise(replicates = n(),
+            mean_gamma_hat = mean(gamma_hat),
+            sd_gamma_hat = sd(gamma_hat),
+            mean_placebo_gamma = mean(placebo_gamma_mean),
+            gamma_reject_rate = mean(gamma_rank_p <= 0.05),
+            mean_T = mean(T),
+            T_positive = mean(T > 0),
+            T_reject_rate = mean(T_rank_p <= 0.05)) |>
+  knitr::kable(digits = 3, caption = sprintf(
+    "%d placebos per replicate; reject rate = share of replicates with rank p <= 0.05",
+    params$n_placebos))
+```
+
+How to read it:
+
+- **mean_gamma_hat:** M1 should recover the γ we planted.
+- **mean_placebo_gamma:** if this is negative even when the true γ is 0, the negative placebo γ in the real analysis comes from the setup, not from the data.
+- **gamma_reject_rate:** the share of replicates where the test rejects "no neighbor effect", i.e. the γ rank p is 0.05 or less (the real network's γ is above all 19 placebos). At γ = 0 this is the false positive rate and should be near 0.05; at γ \> 0 it is the test's power.
+- **T_positive:** the share of replicates where M1 predicts 2022 better than M0 (T \> 0).
+- **T_reject_rate:** the same as gamma_reject_rate, for T. If T_positive and T_reject_rate stay low even at γ = 0.10, T cannot detect a neighbor effect of a realistic size, and the real data's T result says little.
+
+```{r plot, fig.height = 4, fig.width = 10}
+op <- par(mfrow = c(1, 3), mar = c(4, 4, 3, 1))
+boxplot(gamma_hat ~ true_gamma, sims, xlab = "true γ", ylab = "estimated γ",
+        main = "M1 recovers γ")
+points(seq_along(params$gammas), params$gammas, pch = 4, col = "#d95f02",
+       lwd = 2, cex = 1.5)
+boxplot(placebo_gamma_mean ~ true_gamma, sims, xlab = "true γ",
+        ylab = "mean placebo γ", main = "Placebo γ")
+abline(h = 0, lty = 2)
+boxplot(T ~ true_gamma, sims, xlab = "true γ", ylab = "T (M0 − M1 score)",
+        main = "2022 prediction gain")
+abline(h = 0, lty = 2)
+par(op)
+```
+
+Gamma: Question Do the real neighbors’ past rates fit better than shuffled neighbors?\
+T stat: Do the real neighbors predict 2022 better than shuffled neighbors?
+
+Calibration in detail: with no neighbor effect, the γ rank p should be spread evenly over 0.05, 0.10, ..., 1.
+
+```{r calibration, fig.height = 3.5, fig.width = 8}
+op <- par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+null_sims <- sims[sims$true_gamma == 0, ]
+hist(null_sims$gamma_rank_p, breaks = seq(0, 1, 0.05),
+     main = "γ rank p when true γ = 0", xlab = "rank p")
+hist(null_sims$T_rank_p, breaks = seq(0, 1, 0.05),
+     main = "T rank p when true γ = 0", xlab = "rank p")
+par(op)
+```
+
+## 7. What this means for the real analysis
+
+```{r findings}
+f <- sims |>
+  group_by(true_gamma) |>
+  summarise(bias = mean(gamma_hat) - first(true_gamma),
+            placebo_gamma = mean(placebo_gamma_mean),
+            gamma_power = mean(gamma_rank_p <= 0.05),
+            T_power = mean(T_rank_p <= 0.05))
+f
+g0 <- f[f$true_gamma == 0, ]
+g4 <- f[f$true_gamma == 0.04, ]
+```
+
+- **Calibration.** With no neighbor effect, the real network's γ beat all 19 placebos in 0.08% of replicates, and T in 0.03% (expected: 5%; with 100 replicates, anything from about 1% to 9% is consistent with that). So the within-state placebo test is not too easy here.
+- **Power.** With γ = 0.04, about the size we estimate, the γ test found the effect in 0.83% of replicates, but the T test only in 0.03%. So a real effect of our size usually shows up in γ and usually does not show up in the 2022 prediction. The real data's pattern (γ beats all placebos, T does not) is what we would expect if the effect is real but small.
+- **Negative placebo γ.** Even with no neighbor effect, the estimated γ is biased down by about 0.009, and the placebo γ average -0.010. Part of the negative placebo γ in the real analysis (about −0.03) comes from the setup itself; the rest is something in the real data the simulation does not have.
+- **Limit of the simulation.** The simulated rates rise less than the real ones (Section 4). In the real fit, the trend is about zero and the own_lag coefficient is below 1, so a simulation left to run on its own settles toward a lower level; the real rise came from nationwide shocks year after year that M1 does not model. The real data also have more region-years with zero cases than the simulation, so some regions differ from their state more than M1 assumes. The simulation tests the pipeline under M1's own assumptions, not every way the real data could differ.

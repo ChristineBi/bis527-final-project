@@ -58,8 +58,8 @@ births: national total vs included in panel,2023,2537511,2537576,info,65 left ou
 births: national total vs included in panel,2024,2389271,2389325,info,54 left out (unknown municipality); see exclusions_log.csv
 national congenital cases vs bulletin,2024,24443,24443,pass,"Boletim Epidemiologico de Sifilis 2025, Table 1"
 national births vs bulletin denominator,2023,2537576,2537576,pass,the bulletin divides 2024 cases by 2023 births
-congenital_cases: TabNet query is by residence and year,,True,True,pass,retrieved 2026-10-26 02:40 UTC
-births: TabNet query is by residence and year,,True,True,pass,retrieved 2026-10-26 02:41 UTC
+congenital_cases: TabNet query is by residence and year,,True,True,pass,retrieved 2026-10-27 21:21 UTC
+births: TabNet query is by residence and year,,True,True,pass,retrieved 2026-10-27 21:22 UTC
 congenital_cases: database vs raw TabNet page,2013,14115,14115,pass,
 congenital_cases: database vs raw TabNet page,2014,16491,16491,pass,
 congenital_cases: database vs raw TabNet page,2015,19914,19914,pass,

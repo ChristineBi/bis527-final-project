@@ -1,0 +1,790 @@
+---
+title: "Networks, placebos and models of health regions"
+subtitle: "BIS 527: implementation notes Sections 1 and 2"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+params:
+  db: "db/syphilis.duckdb"
+  boundaries: ""
+  out_dir: "data/shared/networks_r"
+  results_dir: "data/shared/results_r"
+  n_placebos: 19
+---
+
+```{r setup, include = FALSE}
+# Paths are relative to the repository root, not to analysis/.
+knitr::opts_knit$set(root.dir = normalizePath(".."))
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+This builds the two neighbor networks of health regions and their weight
+matrices, as in `3_Implementation_Notes.pdf`, Sections 1.1 to 1.4:
+
+- **border network:** neighbors share a boundary segment (the rook rule);
+- **distance network:** neighbors' representative points are within d* km
+  (the notes' rule), plus an alternative where each region is linked to
+  its k nearest regions, so no region is left without neighbors;
+- **weight matrices:** row-standardized, for the main version (border and
+  k nearest, all 450 regions) and the notes' version (border and d* km, on
+  the regions that have neighbors in both);
+- **placebo networks** (1.5): regions shuffled within each state;
+- **models** (Section 2): M0 and M1 negative binomial models, fitted on
+  2014–2021, used to predict 2022, and compared with the placebos.
+
+Inputs:
+
+- Municipal boundaries from Christine's pipeline (`python run_pipeline.py`,
+  about 10-20 minutes): the `municipalities` table in `db/syphilis.duckdb`,
+  or, if the database is not there, `data/processed/municipalities.parquet`.
+  Both have one row per municipality with the geobr 2022 boundary as WKB in
+  `geom_wkb`.
+- `data/reference/health_regions_2023.csv` (in Git): each municipality's
+  2023 health region, the pipeline's saved copy of geobr's file and the
+  same mapping that `region_panel.csv` uses.
+- `data/shared/region_panel.csv` (in Git): cases and births by health
+  region and year.
+
+Packages: `install.packages(c("sf", "spdep", "dplyr", "DBI", "duckdb",
+"arrow", "MASS"))` (`arrow` only for the parquet fallback).
+
+Knit this file from the repository's `analysis/` folder, so that the
+`data/` paths are found.
+
+```{r packages}
+library(sf)
+library(spdep)
+library(dplyr)
+```
+
+## 1. Data preparation (notes 1.1)
+
+Read the municipalities from the database (or the pipeline's parquet file)
+and rebuild each boundary from its WKB with `st_as_sfc()`. (For testing,
+the `boundaries` parameter can instead point to any file `sf` can read with
+the columns `code7` and `uf`.)
+
+```{r read}
+read_municipalities <- function(db, boundaries = "") {
+  if (nzchar(boundaries)) {
+    return(st_read(boundaries, quiet = TRUE))
+  }
+  parquet <- "data/processed/municipalities.parquet"
+  if (file.exists(db)) {
+    con <- DBI::dbConnect(duckdb::duckdb(), db, read_only = TRUE)
+    on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
+    tab <- DBI::dbGetQuery(con,
+                           "SELECT code7, uf, geom_wkb FROM municipalities")
+  } else if (file.exists(parquet)) {
+    tab <- as.data.frame(arrow::read_parquet(
+      parquet, col_select = c("code7", "uf", "geom_wkb")))
+  } else {
+    stop("No boundaries found: run `python run_pipeline.py` to build ", db)
+  }
+  geom <- st_as_sfc(structure(lapply(tab$geom_wkb, as.raw), class = "WKB"),
+                    EWKB = FALSE, crs = 4674)  # SIRGAS 2000, as geobr
+  st_sf(tab[c("code7", "uf")], geometry = geom)
+}
+
+munis <- read_municipalities(params$db, params$boundaries)
+nrow(munis)
+```
+
+Health regions come from `data/reference/health_regions_2023.csv`, read
+as text so codes stay as `11005`, matching `region_panel.csv`. The inner
+join drops the two lagoons in RS that geobr lists as municipalities.
+
+```{r region-codes}
+mapping <- read.csv("data/reference/health_regions_2023.csv",
+                    colClasses = "character") |>
+  distinct(code7, health_region)
+stopifnot(!anyDuplicated(mapping$code7),
+          n_distinct(mapping$health_region) == 450)
+
+munis <- munis |>
+  mutate(code7 = as.character(code7)) |>
+  select(code7, uf) |>
+  inner_join(mapping, by = "code7")
+
+c(municipalities = nrow(munis),
+  regions = n_distinct(munis$health_region))
+```
+
+Check: every health region lies in exactly one state.
+
+```{r one-state}
+states_per_region <- munis |>
+  st_drop_geometry() |>
+  group_by(health_region) |>
+  summarise(n_states = n_distinct(uf))
+stopifnot(all(states_per_region$n_states == 1))
+```
+
+Union the municipalities into region polygons, project to a metric
+coordinate system (Brazil Polyconic, EPSG:5880) and sort by region code to
+fix the node order 1, ..., n.
+
+```{r regions}
+regions <- munis |>
+  st_transform(5880) |>
+  group_by(health_region) |>
+  summarise(uf = first(uf), .groups = "drop") |>
+  mutate(code_num = as.integer(health_region)) |>
+  arrange(code_num) |>
+  select(-code_num)
+
+n <- nrow(regions)
+n
+```
+
+### Map of municipalities, health regions and states
+
+Thin grey lines are municipalities, darker lines health regions, black
+lines states.
+
+```{r map-overview, fig.height = 8, fig.width = 8}
+# Simplified copies for drawing only (the networks use full resolution).
+munis_plot <- munis |> st_transform(5880) |> st_simplify(dTolerance = 2000)
+regions_plot <- st_simplify(regions, dTolerance = 2000)
+states_plot <- regions |> group_by(uf) |> summarise(.groups = "drop") |>
+  st_simplify(dTolerance = 2000)
+
+par(mar = c(0, 0, 2, 0))
+plot(st_geometry(munis_plot), border = "grey80", lwd = 0.2, col = "white",
+     main = "5,570 municipalities, 450 health regions, 27 states")
+plot(st_geometry(regions_plot), border = "grey35", lwd = 0.6, add = TRUE)
+plot(st_geometry(states_plot), border = "black", lwd = 1.4, add = TRUE)
+```
+
+Regions in the North are huge but have very few births, while regions in
+the South, Southeast and on the coast are small and dense. This is why one
+distance cutoff cannot suit every region (Section 3).
+
+```{r map-density, fig.height = 8, fig.width = 8}
+# Births per km2 in each region (2022), to show how sparse the North is.
+births_2022 <- read.csv("data/shared/region_panel.csv",
+                        colClasses = c(health_region = "character")) |>
+  filter(year == 2022) |>
+  select(health_region, B)
+density <- regions |>
+  mutate(area_km2 = as.numeric(st_area(regions)) / 1e6) |>
+  left_join(births_2022, by = "health_region") |>
+  mutate(births_per_km2 = B / area_km2)
+
+breaks <- c(0, 0.01, 0.1, 0.5, 1, 5, 20, Inf)
+labels <- c("< 0.01", "0.01-0.1", "0.1-0.5", "0.5-1", "1-5", "5-20", "> 20")
+classes <- cut(density$births_per_km2, breaks, labels = labels, right = FALSE)
+palette <- hcl.colors(length(labels), "YlOrRd", rev = TRUE)
+
+par(mar = c(0, 0, 2, 0))
+plot(st_geometry(regions_plot), col = palette[classes], border = "grey60",
+     lwd = 0.3, main = "Live births per km2 by health region, 2022")
+plot(st_geometry(states_plot), border = "black", lwd = 1, add = TRUE)
+legend("bottomleft", legend = labels, fill = palette, bty = "n",
+       title = "births / km2", cex = 0.8)
+
+# How area and births line up across regions
+summary_by_size <- density |>
+  st_drop_geometry() |>
+  mutate(size = cut(area_km2, c(0, 5e3, 2e4, 5e4, 1e5, Inf),
+                    labels = c("< 5k", "5k-20k", "20k-50k", "50k-100k",
+                               "> 100k"))) |>
+  group_by(size) |>
+  summarise(regions = n(), median_births = median(B),
+            share_of_area = sum(area_km2), share_of_births = sum(B)) |>
+  mutate(share_of_area = share_of_area / sum(share_of_area),
+         share_of_births = share_of_births / sum(share_of_births))
+knitr::kable(summary_by_size, digits = 3,
+             col.names = c("Region area (km2)", "Regions", "Median births",
+                           "Share of area", "Share of births"))
+```
+
+## 2. Border network (notes 1.2)
+
+Two regions are neighbors only if their boundaries share a segment of
+positive length; touching at a single point does not count. The DE-9IM
+pattern `****1****` says exactly that: the two boundaries meet in a line.
+We do not also require the interiors to be disjoint (`F***1****`): seven
+pairs of regions that share 130-620 km of border overlap by slivers of
+under 1 m² from digitizing, and the stricter pattern would drop them. It is
+built for the whole country at once, so neighbors across state lines are
+kept.
+
+```{r adjacency}
+rook <- st_relate(regions, regions, pattern = "****1****")
+
+A_border <- matrix(0L, n, n, dimnames = list(regions$health_region,
+                                             regions$health_region))
+for (i in seq_len(n)) A_border[i, rook[[i]]] <- 1L
+diag(A_border) <- 0L
+
+m_border <- rowSums(A_border)  # number of neighbors of each region
+c(links = sum(A_border) / 2, median_neighbors = median(m_border),
+  min = min(m_border), max = max(m_border), isolated = sum(m_border == 0))
+```
+
+Cross-check with `spdep::poly2nb(queen = FALSE)`, which uses shared
+boundary points instead of shared segments. The two should agree.
+
+```{r spdep-check}
+nb_rook <- poly2nb(regions, queen = FALSE, row.names = regions$health_region)
+A_spdep <- nb2mat(nb_rook, style = "B", zero.policy = TRUE)
+c(pairs_differing = sum(A_spdep != A_border) / 2)
+```
+
+### Three random neighbor pairs on a map
+
+The notes ask to check three random pairs by eye. Each map shows the pair
+in color and the regions around it in grey.
+
+```{r map, fig.height = 4, fig.width = 10}
+set.seed(527)
+border_pairs <- which(upper.tri(A_border) & A_border == 1, arr.ind = TRUE)
+pick <- border_pairs[sample(nrow(border_pairs), 3), , drop = FALSE]
+plot_regions <- st_simplify(regions, dTolerance = 1000)
+
+par(mfrow = c(1, 3), mar = c(1, 1, 3, 1))
+for (k in seq_len(nrow(pick))) {
+  i <- pick[k, 1]; j <- pick[k, 2]
+  box <- st_bbox(st_buffer(st_union(regions[c(i, j), ]), 50000))
+  plot(st_geometry(plot_regions), xlim = box[c(1, 3)], ylim = box[c(2, 4)],
+       col = "grey92", border = "grey60")
+  plot(st_geometry(plot_regions[i, ]), col = "#1b9e77", add = TRUE)
+  plot(st_geometry(plot_regions[j, ]), col = "#d95f02", add = TRUE)
+  title(sprintf("%s (%s) - %s (%s)", regions$health_region[i],
+                regions$uf[i], regions$health_region[j], regions$uf[j]),
+        cex.main = 0.9)
+}
+```
+
+## 3. Distance network (notes 1.3)
+
+Each region gets a representative point that is guaranteed to lie inside
+it (`st_point_on_surface()`; a centroid can fall outside an irregular
+polygon). Two regions are neighbors if their points are within d km.
+
+```{r points}
+points <- st_point_on_surface(st_geometry(regions))
+D <- as.numeric(st_distance(points)) / 1000  # km, in the metric projection
+D <- matrix(D, n, n, dimnames = dimnames(A_border))
+```
+
+The threshold d* is chosen from 50 to 300 km, before any model is fitted,
+as the d whose median number of neighbors is closest to the border
+network's median; ties go to the smaller d.
+
+```{r choose-d}
+candidates <- c(50, 100, 150, 200, 250, 300)
+target <- median(m_border)
+
+distance_choice <- do.call(rbind, lapply(candidates, function(d) {
+  A_d <- (D <= d & D > 0) * 1L
+  data.frame(d_km = d, median_neighbors = median(rowSums(A_d)),
+             border_median = target,
+             gap = abs(median(rowSums(A_d)) - target),
+             isolated = sum(rowSums(A_d) == 0))
+}))
+d_star <- distance_choice$d_km[order(distance_choice$gap,
+                                     distance_choice$d_km)][1]
+distance_choice$chosen <- distance_choice$d_km == d_star
+knitr::kable(distance_choice)
+```
+
+```{r distance-adjacency}
+A_dist <- (D <= d_star & D > 0) * 1L
+m_dist <- rowSums(A_dist)
+c(d_star_km = d_star, links = sum(A_dist) / 2,
+  median_neighbors = median(m_dist), isolated = sum(m_dist == 0))
+```
+
+### Alternative: k nearest neighbors
+
+A fixed cutoff cannot suit both the small, dense regions of the South and
+the huge, sparse regions of the North (see the density map): at 150 km,
+`r sum(m_dist == 0)` regions have no neighbor at all. The k-nearest-neighbor
+network adapts the distance to each region instead: each region is linked
+to its k closest regions (by the same representative points). "Nearest" is
+not symmetric (A can be among B's 6 nearest without B being among A's), so
+a link is kept if either region is among the other's k nearest. No region
+can be isolated.
+
+k is chosen by the same rule as d*, before any model is fitted: the k from
+3 to 10 whose median number of neighbors (after making links mutual) is
+closest to the border network's median; ties go to the smaller k.
+
+```{r choose-k}
+knn_adjacency <- function(D, k) {
+  K <- matrix(0L, nrow(D), ncol(D), dimnames = dimnames(D))
+  for (i in seq_len(nrow(D))) {
+    d_i <- D[i, ]
+    d_i[i] <- Inf  # a region is not its own neighbor
+    K[i, order(d_i)[seq_len(k)]] <- 1L
+  }
+  pmax(K, t(K))  # mutual: linked if either is among the other's k nearest
+}
+
+knn_choice <- do.call(rbind, lapply(3:10, function(k) {
+  m_k <- rowSums(knn_adjacency(D, k))
+  data.frame(k = k, median_neighbors = median(m_k), border_median = target,
+             gap = abs(median(m_k) - target), min = min(m_k), max = max(m_k))
+}))
+k_star <- knn_choice$k[order(knn_choice$gap, knn_choice$k)][1]
+knn_choice$chosen <- knn_choice$k == k_star
+knitr::kable(knn_choice)
+```
+
+```{r knn-adjacency}
+A_knn <- knn_adjacency(D, k_star)
+m_knn <- rowSums(A_knn)
+c(k = k_star, links = sum(A_knn) / 2, median_neighbors = median(m_knn),
+  min = min(m_knn), max = max(m_knn), isolated = sum(m_knn == 0))
+```
+
+How far apart k-NN neighbors are, by state (the cutoff stretches where
+regions are large):
+
+```{r knn-distances}
+knn_pairs <- which(upper.tri(A_knn) & A_knn == 1, arr.ind = TRUE)
+data.frame(uf = regions$uf[knn_pairs[, 1]], km = D[knn_pairs]) |>
+  group_by(uf) |>
+  summarise(links = n(), median_km = median(km), max_km = max(km)) |>
+  arrange(desc(median_km)) |>
+  knitr::kable(digits = 0)
+```
+
+Distribution of the number of neighbors in the three networks:
+
+```{r degree-plot, fig.height = 3.5, fig.width = 12}
+par(mfrow = c(1, 3))
+for (x in list(list(m_border, "Border"),
+               list(m_dist, sprintf("Distance (%d km)", d_star)),
+               list(m_knn, sprintf("k nearest (k = %d, mutual)", k_star)))) {
+  barplot(table(factor(x[[1]], levels = 0:max(x[[1]]))), main = x[[2]],
+          xlab = "Number of neighbors", ylab = "Health regions",
+          col = "grey70", border = NA)
+}
+```
+
+## 4. Weight matrices (notes 1.4)
+
+Each weight matrix is the row-standardized adjacency matrix, so every row
+sums to one: w_ij = a_ij / m_i. Both networks in a comparison must use the
+same regions, and every region needs at least one neighbor in each
+(otherwise m_i = 0 and w_ij divides by zero).
+
+### 4.1 Main version: border and k-NN, all 450 regions
+
+Neither network has an isolated region, so no region is dropped.
+
+```{r weights-main}
+region_panel <- read.csv("data/shared/region_panel.csv",
+                         colClasses = c(health_region = "character"))
+stopifnot(all(m_border > 0), all(m_knn > 0))
+W_border_all <- A_border / m_border
+W_knn <- A_knn / m_knn
+```
+
+### 4.2 Notes' version: border and 150 km, common regions
+
+This follows the notes as written. Regions with no neighbors in either
+network are dropped, repeated until none is left (a drop can isolate
+another region). Every dropped region is isolated only in the distance
+network; all have border neighbors.
+
+```{r drop-isolated}
+keep <- seq_len(n)
+dropped <- integer(0)
+repeat {
+  isolated <- keep[rowSums(A_border[keep, keep, drop = FALSE]) == 0 |
+                   rowSums(A_dist[keep, keep, drop = FALSE]) == 0]
+  if (length(isolated) == 0) break
+  dropped <- c(dropped, isolated)
+  keep <- setdiff(keep, isolated)
+}
+
+excluded <- data.frame(health_region = regions$health_region[dropped],
+                       uf = regions$uf[dropped],
+                       border_neighbors = m_border[dropped],
+                       distance_neighbors = m_dist[dropped])
+c(kept = length(keep), dropped = length(dropped))
+table(excluded$uf)
+```
+
+How much of the data the dropped regions hold (2014–2022):
+
+```{r excluded-share}
+region_panel |>
+  filter(year >= 2014, year <= 2022) |>
+  mutate(dropped = health_region %in% excluded$health_region) |>
+  group_by(dropped) |>
+  summarise(regions = n_distinct(health_region), cases = sum(Y),
+            births = sum(B), rate_per_1000 = 1000 * cases / births) |>
+  mutate(share_cases = cases / sum(cases),
+         share_births = births / sum(births)) |>
+  knitr::kable(digits = 3)
+```
+
+```{r excluded-map, fig.height = 6}
+plot(st_geometry(plot_regions), col = "grey92", border = "grey70",
+     main = sprintf("%d regions with no neighbor within %d km",
+                    length(dropped), d_star))
+plot(st_geometry(plot_regions[dropped, ]), col = "#d95f02", border = "grey40",
+     add = TRUE)
+```
+
+```{r weights-notes}
+A_border_c <- A_border[keep, keep]
+A_dist_c <- A_dist[keep, keep]
+W_border <- A_border_c / rowSums(A_border_c)
+W_dist <- A_dist_c / rowSums(A_dist_c)
+```
+
+### Checks
+
+From notes 1.4: each A is symmetric with a zero diagonal, each row of W
+sums to 1, and the node IDs and order match `region_panel.csv`.
+
+```{r checks}
+panel_codes <- unique(region_panel$health_region)
+
+for (A_c in list(A_border, A_knn, A_border_c, A_dist_c)) {
+  stopifnot(isSymmetric(A_c), all(diag(A_c) == 0), all(rowSums(A_c) > 0))
+}
+for (W in list(W_border_all, W_knn, W_border, W_dist)) {
+  stopifnot(isTRUE(all.equal(unname(rowSums(W)), rep(1, nrow(W)))))
+}
+stopifnot(
+  identical(rownames(W_border_all), rownames(W_knn)),
+  identical(rownames(W_border), rownames(W_dist)),
+  setequal(rownames(W_border_all), panel_codes),
+  n == 450
+)
+"all checks pass"
+```
+
+## 5. Save
+
+Main version (all 450 regions): `nodes.csv`, `edges_border.csv`,
+`edges_knn.csv`. Notes' version (the `r length(keep)` common regions):
+`nodes_150km.csv`, `edges_border_150km.csv`, `edges_distance_150km.csv`,
+`excluded_regions_150km.csv`. Edge lists have one row per neighbor pair
+(i < j), so any W can be rebuilt from them; `weights.rds` holds all four W
+matrices for R.
+
+```{r save}
+dir.create(params$out_dir, showWarnings = FALSE, recursive = TRUE)
+out <- function(x, f) write.csv(x, file.path(params$out_dir, f),
+                                row.names = FALSE)
+edge_list <- function(A) {
+  p <- which(upper.tri(A) & A == 1, arr.ind = TRUE)
+  data.frame(region_i = rownames(A)[p[, 1]], region_j = rownames(A)[p[, 2]])
+}
+xy <- st_coordinates(points)
+
+nodes <- data.frame(node = seq_len(n), health_region = regions$health_region,
+                    uf = regions$uf, x_m = xy[, 1], y_m = xy[, 2],
+                    border_neighbors = m_border, knn_neighbors = m_knn,
+                    distance_neighbors = m_dist)
+out(nodes, "nodes.csv")
+out(edge_list(A_border), "edges_border.csv")
+out(edge_list(A_knn), "edges_knn.csv")
+out(knn_choice, "knn_choice.csv")
+
+nodes_150 <- data.frame(node = seq_along(keep),
+                        health_region = regions$health_region[keep],
+                        uf = regions$uf[keep],
+                        border_neighbors = rowSums(A_border_c),
+                        distance_neighbors = rowSums(A_dist_c))
+out(nodes_150, "nodes_150km.csv")
+out(edge_list(A_border_c), "edges_border_150km.csv")
+out(edge_list(A_dist_c), "edges_distance_150km.csv")
+out(excluded, "excluded_regions_150km.csv")
+out(distance_choice, "distance_choice.csv")
+
+saveRDS(list(main = list(W_border = W_border_all, W_knn = W_knn,
+                         k = k_star),
+             notes_150km = list(W_border = W_border, W_dist = W_dist,
+                                d_star = d_star)),
+        file.path(params$out_dir, "weights.rds"))
+
+c(nodes = n, border_edges = sum(A_border) / 2, knn_edges = sum(A_knn) / 2,
+  nodes_150km = length(keep))
+```
+
+## 6. Placebo networks (notes 1.5)
+
+A placebo shuffles the regions within each state and applies the same
+shuffle to the rows and columns of A: A_p[i, j] = A[perm[i], perm[j]]. The
+rows and columns keep their original region codes, so when the data are
+matched by code, each region gets the neighbors of the region it was
+swapped with. Each region keeps its number of neighbors, and the case data
+stay fixed.
+
+```{r make-placebo}
+make_placebo <- function(A, uf, seed) {
+  set.seed(seed)
+  perm <- seq_along(uf)
+  for (s in unique(uf)) {
+    idx <- which(uf == s)
+    perm[idx] <- idx[sample.int(length(idx))]  # sample(idx) fails if length 1
+  }
+  A_p <- A[perm, perm]
+  dimnames(A_p) <- dimnames(A)  # keep the original labels
+  A_p
+}
+
+changed_share <- function(A_p, A) sum(A_p == 1 & A == 0) / sum(A == 1)
+```
+
+The toy test from the notes: six nodes with links A–B, B–C, B–D, C–D, D–E
+and E–F; A to D in state 1, E and F in state 2. After swapping A and D,
+A's neighbors should be B, C and E, and D's only neighbor should be B.
+
+```{r toy-test}
+toy <- matrix(0, 6, 6, dimnames = list(LETTERS[1:6], LETTERS[1:6]))
+for (e in list(c("A", "B"), c("B", "C"), c("B", "D"), c("C", "D"),
+               c("D", "E"), c("E", "F"))) {
+  toy[e[1], e[2]] <- toy[e[2], e[1]] <- 1
+}
+perm <- c(4, 2, 3, 1, 5, 6)  # swap A and D only
+toy_p <- toy[perm, perm]
+dimnames(toy_p) <- dimnames(toy)
+stopifnot(identical(names(which(toy_p["A", ] == 1)), c("B", "C", "E")),
+          identical(names(which(toy_p["D", ] == 1)), "B"))
+"toy test passes"
+```
+
+The main version gets 19 placebos of each network (border and k-NN) on all
+450 regions. The notes only ask for border placebos; the k-NN placebos give
+the k-NN model its own null. The 150 km comparison uses border and 150 km
+placebos on its 405 regions. Every placebo is checked to be symmetric with a
+zero diagonal and the same neighbor counts as the real network.
+
+```{r placebos}
+seeds <- seq_len(params$n_placebos)
+uf_all <- regions$uf
+uf_c <- regions$uf[keep]
+
+make_placebos <- function(A, uf) {
+  lapply(seeds, function(s) {
+    A_p <- make_placebo(A, uf, s)
+    stopifnot(isSymmetric(A_p), all(diag(A_p) == 0),
+              identical(unname(sort(rowSums(A_p))), unname(sort(rowSums(A)))))
+    A_p
+  })
+}
+placebos <- list(border = make_placebos(A_border, uf_all),
+                 knn = make_placebos(A_knn, uf_all),
+                 border_150km = make_placebos(A_border_c, uf_c),
+                 distance_150km = make_placebos(A_dist_c, uf_c))
+real <- list(border = A_border, knn = A_knn,
+             border_150km = A_border_c, distance_150km = A_dist_c)
+
+sapply(names(placebos), function(nm) {
+  s <- sapply(placebos[[nm]], changed_share, A = real[[nm]])
+  c(min = min(s), median = median(s), max = max(s))
+}) |> knitr::kable(digits = 2, caption = "Share of real links changed")
+```
+
+## 7. Models M0 and M1 (notes Section 2)
+
+For each region and year, x = log(1 + 1000 Y / B). The models are
+
+- M0: Y ~ own_lag + state + trend, offset log B;
+- M1: Y ~ own_lag + Z + state + trend, offset log B,
+
+where own_lag = x in the previous year, Z is the neighbors' average of
+own_lag (from W), standardized with the 2014–2021 mean and SD, and
+trend = year − 2014. Both are negative binomial (`MASS::glm.nb`), fitted
+on 2014–2021 and used to predict 2022.
+
+The score is not set by the notes; we use the birth-weighted RMSE of the
+2022 rate per 1,000 births (lower is better). T = score(M0) − score(M1), so
+T > 0 means the neighbors improve the 2022 prediction.
+
+```{r model-functions}
+region_panel <- region_panel |> mutate(x = log1p(1000 * Y / B))
+years <- sort(unique(region_panel$year))
+
+# own_lag, Z and trend for the regions in W, in W's order (notes 2.1).
+model_data <- function(W) {
+  codes <- rownames(W)
+  p <- region_panel |> filter(health_region %in% codes)
+  i <- match(p$health_region, codes)
+  j <- match(p$year, years)
+  x <- matrix(NA_real_, length(codes), length(years))
+  x[cbind(i, j)] <- p$x
+  lag <- cbind(NA, x[, -length(years)])  # x_{i,t-1}; years are consecutive
+  nbr <- W %*% lag
+  d <- p |>
+    mutate(own_lag = lag[cbind(i, j)], nbr = nbr[cbind(i, j)],
+           trend = year - 2014) |>
+    filter(year >= 2014, year <= 2022)
+  train <- d$year <= 2021
+  d$Z <- (d$nbr - mean(d$nbr[train])) / sd(d$nbr[train])
+  d
+}
+
+birth_weighted_rmse <- function(Y, B, pred) {
+  sqrt(sum(B * (1000 * pred / B - 1000 * Y / B)^2) / sum(B))
+}
+
+# Fit on 2014-2021, predict 2022 (notes 2.2).
+fit_predict <- function(W, with_z) {
+  d <- model_data(W)
+  f <- if (with_z) {
+    Y ~ own_lag + Z + uf + trend + offset(log(B))
+  } else {
+    Y ~ own_lag + uf + trend + offset(log(B))
+  }
+  train <- d[d$year <= 2021, ]
+  test <- d[d$year == 2022, ]
+  fit <- MASS::glm.nb(f, data = train)
+  pred <- unname(predict(fit, newdata = test, type = "response"))
+  stopifnot(all(is.finite(pred)), all(pred >= 0))
+  diag <- data.frame(regions = nrow(test), converged = fit$converged,
+                     theta = fit$theta, theta_se = fit$SE.theta,
+                     aic = AIC(fit),
+                     score_2022 = birth_weighted_rmse(test$Y, test$B, pred))
+  if (with_z) {
+    co <- summary(fit)$coefficients["Z", ]
+    diag <- cbind(diag, gamma = co[["Estimate"]], gamma_se = co[["Std. Error"]],
+                  rate_ratio = exp(co[["Estimate"]]),
+                  rr_low = exp(co[["Estimate"]] - 1.96 * co[["Std. Error"]]),
+                  rr_high = exp(co[["Estimate"]] + 1.96 * co[["Std. Error"]]),
+                  wald_p = co[["Pr(>|z|)"]])
+  }
+  list(fit = fit, diag = diag,
+       pred = test[c("health_region", "uf", "Y", "B")] |> mutate(pred = pred))
+}
+
+# One-sided rank p: (1 + #{placebo >= real}) / (1 + number of placebos).
+rank_p <- function(real, null) (1 + sum(null >= real)) / (1 + length(null))
+```
+
+### Real networks
+
+The main version uses the 450 regions; the 150 km comparison refits M0 on
+its 405 regions, so each M1 is compared with an M0 on the same regions.
+(M0 does not use W; any W with the right regions works.)
+
+```{r fit-real}
+fits <- list(
+  "M0" = fit_predict(W_border_all, FALSE),
+  "M1 border" = fit_predict(W_border_all, TRUE),
+  "M1 k-NN" = fit_predict(W_knn, TRUE),
+  "M0 (150 km regions)" = fit_predict(W_border, FALSE),
+  "M1 border (150 km regions)" = fit_predict(W_border, TRUE),
+  "M1 150 km" = fit_predict(W_dist, TRUE))
+stopifnot(all(sapply(fits, function(f) f$diag$converged)))
+
+m0_score <- c(main = fits[["M0"]]$diag$score_2022,
+              comparison = fits[["M0 (150 km regions)"]]$diag$score_2022)
+```
+
+### Placebo networks
+
+Each placebo W is used in place of the real W; Z is standardized with the
+placebo's own training data.
+
+```{r fit-placebos}
+placebo_null <- function(nm, m0) {
+  do.call(rbind, lapply(seq_along(seeds), function(k) {
+    A_p <- placebos[[nm]][[k]]
+    d <- fit_predict(A_p / rowSums(A_p), TRUE)$diag
+    data.frame(network = nm, seed = seeds[k],
+               changed_share = changed_share(A_p, real[[nm]]),
+               converged = d$converged, score_2022 = d$score_2022,
+               T = m0 - d$score_2022, gamma = d$gamma)
+  }))
+}
+null <- rbind(placebo_null("border", m0_score[["main"]]),
+              placebo_null("knn", m0_score[["main"]]),
+              placebo_null("border_150km", m0_score[["comparison"]]),
+              placebo_null("distance_150km", m0_score[["comparison"]]))
+table(null$network, null$converged)
+```
+
+### Results
+
+```{r results}
+placebo_of <- c("M1 border" = "border", "M1 k-NN" = "knn",
+                "M1 border (150 km regions)" = "border_150km",
+                "M1 150 km" = "distance_150km")
+results <- do.call(rbind, lapply(names(fits), function(nm) {
+  d <- fits[[nm]]$diag
+  m0 <- if (grepl("150 km", nm)) m0_score[["comparison"]] else m0_score[["main"]]
+  row <- data.frame(model = nm, version = if (grepl("150 km", nm))
+                      "comparison (405)" else "main (450)",
+                    d[c("regions", "converged", "theta", "aic", "score_2022")],
+                    T = m0 - d$score_2022, gamma = NA, rate_ratio = NA,
+                    rr_low = NA, rr_high = NA, wald_p = NA,
+                    T_rank_p = NA, gamma_rank_p = NA)
+  if (nm %in% names(placebo_of)) {
+    nl <- null[null$network == placebo_of[[nm]], ]
+    row[c("gamma", "rate_ratio", "rr_low", "rr_high", "wald_p")] <-
+      d[c("gamma", "rate_ratio", "rr_low", "rr_high", "wald_p")]
+    row$T_rank_p <- rank_p(row$T, nl$T)
+    row$gamma_rank_p <- rank_p(row$gamma, nl$gamma)
+  }
+  row
+}))
+
+results |>
+  transmute(model, regions, theta, score_2022, T,
+            `rate ratio (95% CI)` = ifelse(is.na(rate_ratio), "",
+              sprintf("%.3f (%.3f–%.3f)", rate_ratio, rr_low, rr_high)),
+            wald_p, T_rank_p, gamma_rank_p) |>
+  knitr::kable(digits = 3, caption = sprintf(
+    "M0 and M1, trained 2014–2021, scored on 2022 (%d placebos per network)",
+    length(seeds)))
+```
+
+How to read it:
+
+- **rate ratio:** exp(γ). Holding the region's own lagged rate, state and
+  trend fixed, a 1 SD higher lagged neighbor average multiplies the
+  expected rate by this much.
+- **T:** the gain in 2022 prediction over M0 (birth-weighted RMSE per 1,000
+  births). T > 0 means the neighbors help.
+- **T rank p / gamma rank p:** where the real network falls among its
+  placebos. With 19 placebos the smallest possible value is 0.05, so these
+  are descriptive, not a significance test (notes 2.3).
+- A better prediction shows that nearby regions carry useful information.
+  It does not show that syphilis spreads between regions (notes 2.3).
+
+```{r null-plot, fig.height = 6, fig.width = 10}
+op <- par(mfrow = c(2, 4), mar = c(4, 3, 3, 1))
+for (stat in c("gamma", "T")) {
+  for (nm in names(placebo_of)) {
+    nl <- null[null$network == placebo_of[[nm]], stat]
+    r <- results[results$model == nm, stat]
+    stripchart(nl, method = "jitter", pch = 16, col = "grey50",
+               xlim = range(c(nl, r)), main = nm, xlab = stat, cex.main = 0.9)
+    abline(v = r, col = "#d95f02", lwd = 2)
+  }
+}
+par(op)
+```
+
+Grey points are the placebos; the orange line is the real network.
+
+### Save results
+
+```{r save-results}
+dir.create(params$results_dir, showWarnings = FALSE, recursive = TRUE)
+out_r <- function(x, f) write.csv(x, file.path(params$results_dir, f),
+                                  row.names = FALSE)
+out_r(results, "model_comparison.csv")
+out_r(null, "placebo_scores.csv")
+out_r(do.call(rbind, lapply(names(fits), function(nm)
+  fits[[nm]]$pred |> mutate(model = nm))), "predictions_2022.csv")
+out_r(do.call(rbind, lapply(names(fits), function(nm) {
+  co <- summary(fits[[nm]]$fit)$coefficients
+  data.frame(model = nm, term = rownames(co), estimate = co[, 1],
+             se = co[, 2], row.names = NULL)
+})), "coefficients.csv")
+list.files(params$results_dir)
+```
