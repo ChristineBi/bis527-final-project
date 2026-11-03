@@ -14,6 +14,9 @@ params:
   n_placebos: 19
   cores: 4
   rerun: false
+  cross_gammas: !r c(0, 0.04)
+  n_reps_cross: 100
+  rerun_cross: false
 editor_options: 
   markdown: 
     wrap: 72
@@ -344,7 +347,180 @@ g0 <- f[f$true_gamma == 0, ]
 g4 <- f[f$true_gamma == 0.04, ]
 ```
 
-- **Calibration.** With no neighbor effect, the real network's γ beat all 19 placebos in 0.08% of replicates, and T in 0.03% (expected: 5%; with 100 replicates, anything from about 1% to 9% is consistent with that). So the within-state placebo test is not too easy here.
-- **Power.** With γ = 0.04, about the size we estimate, the γ test found the effect in 0.83% of replicates, but the T test only in 0.03%. So a real effect of our size usually shows up in γ and usually does not show up in the 2022 prediction. The real data's pattern (γ beats all placebos, T does not) is what we would expect if the effect is real but small.
+- **Calibration.** With no neighbor effect, the real network's γ beat all 19 placebos in `r round(100 * g0$gamma_power)`% of replicates, and T in `r round(100 * g0$T_power)`% (expected: 5%; with 100 replicates, anything from about 1% to 9% is consistent with that). So the within-state placebo test is not too easy here.
+- **Power.** With γ = 0.04, about the size we estimate, the γ test found the effect in `r round(100 * g4$gamma_power)`% of replicates, but the T test only in `r round(100 * g4$T_power)`%. So a real effect of our size usually shows up in γ and usually does not show up in the 2022 prediction. The real data's pattern (γ beats all placebos, T does not) is what we would expect if the effect is real but small.
 - **Negative placebo γ.** Even with no neighbor effect, the estimated γ is biased down by about 0.009, and the placebo γ average -0.010. Part of the negative placebo γ in the real analysis (about −0.03) comes from the setup itself; the rest is something in the real data the simulation does not have.
 - **Limit of the simulation.** The simulated rates rise less than the real ones (Section 4). In the real fit, the trend is about zero and the own_lag coefficient is below 1, so a simulation left to run on its own settles toward a lower level; the real rise came from nationwide shocks year after year that M1 does not model. The real data also have more region-years with zero cases than the simulation, so some regions differ from their state more than M1 assumes. The simulation tests the pipeline under M1's own assumptions, not every way the real data could differ.
+
+## 8. Cross check: can we tell border from k-NN?
+
+The real analysis compares two networks: border and k-NN. Sections 5–7 show the placebo test works when we analyze with the network that generated the data. Here we ask whether the two networks can be told apart. We simulate data from each network and analyze each dataset with both:
+
+|                          | analyze with border | analyze with k-NN |
+|--------------------------|---------------------|-------------------|
+| **generate with border** | right network       | closeness only    |
+| **generate with k-NN**   | border only         | right network     |
+
+For each simulated dataset we fit M0, M1 with border, M1 with k-NN, and 19 placebos of each network, and record each network's γ and rank p. We also compare the two M1 fits head to head by AIC (lower is better), which is how we would choose between them on the real data.
+
+Data generated with k-NN use the coefficients of M1 fitted to the real data with k-NN (and that fit's Z mean and SD), so each network generates data the way it would explain the real data. The results are saved to `data/shared/results_r/simulation_cross.csv`; set `rerun_cross: true` to run again (about 45 minutes on 4 cores).
+
+```{r cross-networks}
+edges_knn <- read.csv(file.path(params$networks_dir, "edges_knn.csv"),
+                      colClasses = "character")
+A_knn <- matrix(0, n, n, dimnames = list(codes, codes))
+A_knn[cbind(match(edges_knn$region_i, codes),
+            match(edges_knn$region_j, codes))] <- 1
+A_knn <- A_knn + t(A_knn)
+stopifnot(isSymmetric(A_knn), all(rowSums(A_knn) > 0))
+W_knn <- A_knn / rowSums(A_knn)
+
+# Simulation parameters from the real M1 fit with a given network.
+sim_params <- function(W) {
+  fit <- fit_predict(region_panel, W, TRUE)$fit
+  b <- coef(fit)
+  d <- model_data(region_panel, W)
+  st <- setNames(rep(0, length(unique(uf))), sort(unique(uf)))
+  for (s in names(st)[-1]) st[s] <- b[[paste0("uf", s)]]
+  list(W = W, b = b, theta = fit$theta, state = st,
+       z_mean = mean(d$nbr[d$year <= 2021]), z_sd = sd(d$nbr[d$year <= 2021]),
+       aic = AIC(fit))
+}
+pars <- list(border = sim_params(W), knn = sim_params(W_knn))
+
+# Shared links: how similar are the two networks?
+c(border_links = sum(A) / 2, knn_links = sum(A_knn) / 2,
+  shared_links = sum(A == 1 & A_knn == 1) / 2)
+sapply(pars, function(p) c(own_lag = p$b[["own_lag"]], gamma = p$b[["Z"]],
+                           theta = p$theta, aic = p$aic))
+```
+
+The same simulation as Section 4, but with a chosen network's neighbors and parameters. With border parameters it gives exactly the datasets of `simulate_panel()` for the same seed.
+
+```{r cross-simulate}
+simulate_with <- function(p, gamma, seed) {
+  set.seed(seed)
+  x <- matrix(NA_real_, n, length(years))
+  y <- matrix(NA_real_, n, length(years))
+  start <- region_panel[region_panel$year == 2013, ]
+  x[match(start$health_region, codes), 1] <- start$x
+  y[match(start$health_region, codes), 1] <- start$Y
+  for (k in 2:length(years)) {
+    own_lag <- x[, k - 1]
+    z <- (as.vector(p$W %*% own_lag) - p$z_mean) / p$z_sd
+    eta <- p$b[["(Intercept)"]] + p$b[["own_lag"]] * own_lag + gamma * z +
+      p$state[uf] + p$b[["trend"]] * (years[k] - 2014)
+    y[, k] <- rnbinom(n, size = p$theta, mu = births[, k] * exp(eta))
+    x[, k] <- log1p(1000 * y[, k] / births[, k])
+  }
+  data.frame(health_region = rep(codes, length(years)),
+             uf = rep(uf, length(years)),
+             year = rep(years, each = n),
+             Y = as.vector(y), B = as.vector(births), x = as.vector(x))
+}
+stopifnot(identical(simulate_with(pars$border, 0.04, 1),
+                    simulate_panel(0.04, 1)))
+
+nets <- list(border = A, knn = A_knn)
+
+cross_replicate <- function(generator, gamma, rep) {
+  seed <- round(gamma * 1e4) * 1e5 + rep * 100 +
+    if (generator == "knn") 5e7 else 0
+  panel <- simulate_with(pars[[generator]], gamma, seed)
+  m0 <- fit_predict(panel, W, FALSE)$score
+  out <- data.frame(generator = generator, true_gamma = gamma, rep = rep)
+  for (nm in names(nets)) {
+    A_n <- nets[[nm]]
+    m1 <- fit_predict(panel, A_n / rowSums(A_n), TRUE)
+    null <- t(sapply(seq_len(params$n_placebos), function(k) {
+      A_p <- make_placebo(A_n, uf, seed + k + if (nm == "knn") 50 else 0)
+      r <- fit_predict(panel, A_p / rowSums(A_p), TRUE)
+      c(T = m0 - r$score, gamma = r$gamma)
+    }))
+    out[[paste0("gamma_hat_", nm)]] <- m1$gamma
+    out[[paste0("aic_", nm)]] <- AIC(m1$fit)
+    out[[paste0("T_", nm)]] <- m0 - m1$score
+    out[[paste0("gamma_rank_p_", nm)]] <- rank_p(m1$gamma, null[, "gamma"])
+    out[[paste0("T_rank_p_", nm)]] <- rank_p(m0 - m1$score, null[, "T"])
+  }
+  out
+}
+```
+
+```{r cross-run}
+cross_file <- file.path(params$results_dir, "simulation_cross.csv")
+if (params$rerun_cross || !file.exists(cross_file)) {
+  grid <- expand.grid(rep = seq_len(params$n_reps_cross),
+                      gamma = params$cross_gammas,
+                      generator = names(nets), stringsAsFactors = FALSE)
+  cores <- if (.Platform$OS.type == "windows") 1 else params$cores
+  started <- Sys.time()
+  cross <- parallel::mclapply(seq_len(nrow(grid)), function(r) {
+    cross_replicate(grid$generator[r], grid$gamma[r], grid$rep[r])
+  }, mc.cores = cores)
+  failed <- !sapply(cross, is.data.frame)
+  if (any(failed)) warning(sum(failed), " replicates failed and are dropped")
+  cross <- do.call(rbind, cross[!failed])
+  write.csv(cross, cross_file, row.names = FALSE)
+  message("cross check took ", format(Sys.time() - started))
+}
+cross <- read.csv(cross_file)
+table(generator = cross$generator, true_gamma = cross$true_gamma)
+```
+
+```{r cross-summary}
+cross |>
+  group_by(generator, true_gamma) |>
+  summarise(replicates = n(),
+            gamma_hat_border = mean(gamma_hat_border),
+            gamma_hat_knn = mean(gamma_hat_knn),
+            reject_rate_border = mean(gamma_rank_p_border <= 0.05),
+            reject_rate_knn = mean(gamma_rank_p_knn <= 0.05),
+            aic_prefers_border = mean(aic_border < aic_knn),
+            .groups = "drop") |>
+  knitr::kable(digits = 3, caption =
+    "Each row: data generated with one network, analyzed with both")
+```
+
+How to read it:
+
+- **reject_rate_border / reject_rate_knn:** the share of datasets where that network's γ beat all 19 of its placebos (rank p ≤ 0.05). At γ = 0 both should be near 0.05.
+- **Off-diagonal power:** with γ = 0.04, if the wrong network also rejects most of the time, then a placebo win does not tell us *which* kind of neighbor matters, only that nearby regions do.
+- **aic_prefers_border:** the share of datasets where M1 with border fits better than M1 with k-NN. If this is high when border generated the data and low when k-NN did, the head-to-head comparison can tell the two apart. At γ = 0 neither network carries information, so it should be near 0.5.
+
+On the real data, M1 with border has AIC `r sprintf("%.1f", pars$border$aic)` and M1 with k-NN `r sprintf("%.1f", pars$knn$aic)`, a difference of `r sprintf("%.1f", pars$knn$aic - pars$border$aic)` in favour of `r if (pars$border$aic < pars$knn$aic) "border" else "k-NN"`.
+
+```{r cross-plot, fig.height = 4, fig.width = 9}
+op <- par(mfrow = c(1, 2), mar = c(4, 4, 3, 1))
+for (g in params$cross_gammas) {
+  d <- cross[cross$true_gamma == g, ]
+  boxplot(aic_knn - aic_border ~ generator, d,
+          names = c("generated: border", "generated: k-NN"),
+          ylab = "AIC(k-NN) − AIC(border)",
+          main = sprintf("True γ = %s", g))
+  abline(h = 0, lty = 2)
+  abline(h = pars$knn$aic - pars$border$aic, col = "#d95f02", lwd = 2)
+}
+par(op)
+```
+
+Above 0 means border fits better. The orange line is the real data's difference.
+
+```{r cross-findings}
+cs <- cross |>
+  group_by(generator, true_gamma) |>
+  summarise(rb = mean(gamma_rank_p_border <= 0.05),
+            rk = mean(gamma_rank_p_knn <= 0.05),
+            right = if (first(generator) == "border") mean(aic_border < aic_knn)
+                    else mean(aic_knn < aic_border),
+            .groups = "drop")
+b4 <- cs[cs$generator == "border" & cs$true_gamma == 0.04, ]
+k4 <- cs[cs$generator == "knn" & cs$true_gamma == 0.04, ]
+```
+
+What this means:
+
+- **The two networks overlap a lot:** `r sum(A == 1 & A_knn == 1) / 2` of the `r sum(A) / 2` border links are also k-NN links.
+- **A placebo win does not say which network is right.** When border generated the data (γ = 0.04), k-NN still beat its placebos in `r round(100 * b4$rk)`% of datasets; when k-NN generated it, border beat its placebos in `r round(100 * k4$rb)`%. So the real result (both networks beat their placebos) tells us nearby regions matter, not which kind of neighbor.
+- **The head-to-head AIC comparison picks the right network** in `r round(100 * b4$right)`% (border true) and `r round(100 * k4$right)`% (k-NN true) of datasets with γ = 0.04.
+- **On the real data the two fit almost equally well** (AIC difference `r sprintf("%.1f", pars$knn$aic - pars$border$aic)`), well inside the range the simulation produces under either truth. The data do not distinguish shared borders from plain closeness.
